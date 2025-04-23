@@ -1,0 +1,55 @@
+body {
+    font-family: sans-serif;
+    background-color: #f0f8ff; /* Lys blå bakgrunn */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.weather-container {
+    background-color: #ffffff; /* Hvit boks */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #555;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+#weather-info p {
+    font-size: 1.1em;
+    color: #444;
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+#weather-info span {
+    font-weight: bold;
+    color: #0056b3; /* Mørkere blå for data */
+}
+
+.status-message {
+    margin-top: 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.error {
+    color: #d9534f; /* Rød farge for feilmeldinger */
+    font-weight: bold;
+}
