@@ -84,32 +84,34 @@
             width: 100%;
             height: 100%;
             pointer-events: none; /* Allows clicks to pass through to bubbles */
-            z-index: 1; /* Ensure SVG is above bubbles if needed, but lines are drawn onto it */
+            z-index: 1; 
         }
 
         .bubble {
             position: absolute;
             border: 2px solid #007bff;
             background-color: #ffffff;
-            padding: 12px 18px;
+            padding: 12px 18px; /* Total padding: horizontal 36px, vertical 24px */
             border-radius: 60px;
             text-align: center;
-            min-width: 130px;
-            max-width: 180px;
-            min-height: 35px;
+            min-width: 130px; /* Content width before padding */
+            max-width: 180px; /* Content width before padding */
+            min-height: 35px;  /* Content height before padding */
+            /* Effective visual width approx: max-width + 36 (padding) + 4 (border) = 220px */
+            /* Effective visual height approx: min-height + 24 (padding) + 4 (border) = 63px */
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: text; /* Default cursor for text editing */
+            cursor: text; 
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             font-size: 0.85em;
             line-height: 1.3;
             overflow-wrap: break-word;
             word-break: break-word;
-            z-index: 2; /* Bubbles above SVG layer for direct interaction if pointer-events were on SVG */
+            z-index: 2; 
         }
-        .bubble.selected-bubble { /* Styling for the first bubble clicked when drawing an arrow */
-            outline: 3px dashed #fd7e14; /* Orange dashed outline */
+        .bubble.selected-bubble { 
+            outline: 3px dashed #fd7e14; 
             outline-offset: 2px;
         }
         .bubble[contenteditable="true"]:focus {
@@ -134,18 +136,36 @@
             font-weight: bold;
         }
 
-        #bubble1 { top: 200px; left: 130px; }
-        #bubble2 { top: 110px; left: 240px; }
-        #bubble3 { top: 60px;  left: 370px; transform: translateX(-50%);}
-        #bubble4 { top: 60px;  left: 530px; transform: translateX(-50%);}
-        #bubble5 { top: 130px; left: 530px; transform: translateX(-50%);}
-        #bubble6 { top: 160px; left: 680px; }
-        #bubble7 { top: 290px; left: 710px; }
-        #bubble8 { top: 420px; left: 680px; }
-        #bubble9  { top: 540px; left: 120px; }
-        #bubble10 { top: 620px; left: 250px; transform: translateX(-50%);}
-        #bubble11 { top: 620px; left: 420px; transform: translateX(-50%);}
-        #bubble12 { top: 540px; left: 560px; }
+        /* Nye symmetriske posisjoner for ytre bobler */
+        /* Senter (cx, cy) = (450, 375) */
+        /* Radiuser for ellipse (a, b) = (360, 280) */
+        /* Boble offset (x,y) basert på ca. 180px bredde, 63px høyde = (90, 31.5) */
+
+        /* k=0: Topp */
+        #bubble1 { top: 64px; left: 360px; } /* Nettverk ifbm. akuttinnskr. */
+        /* k=1: Topp-høyre */
+        #bubble2 { top: 101px; left: 540px; } /* Team/Samarbeidsutv. */
+        /* k=2 */
+        #bubble3 { top: 204px; left: 672px; } /* Regionens */
+        /* k=3: Høyre midt */
+        #bubble4 { top: 344px; left: 720px; } /* Regionleder */
+        /* k=4 */
+        #bubble5 { top: 484px; left: 672px; } /* Regionteam */
+        /* k=5: Bunn-høyre */
+        #bubble6 { top: 586px; left: 540px; } /* Samarbeidspartnere */
+        /* k=6: Bunn midt */
+        #bubble7 { top: 624px; left: 360px; } /* Regionalnettverk */
+        /* k=7: Bunn-venstre */
+        #bubble8 { top: 586px; left: 180px; } /* Regionteam */
+        /* k=8 */
+        #bubble9 { top: 484px; left: 48px;  } /* Nettverk lokalt/kommunalt */
+        /* k=9: Venstre midt */
+        #bubble10 { top: 344px; left: 0px;  } /* Region-telen */
+        /* k=10 */
+        #bubble11 { top: 204px; left: 48px;  } /* Team møt */
+        /* k=11: Topp-venstre */
+        #bubble12 { top: 101px; left: 180px; } /* Seksjonsledermøt. */
+
 
         .case-box-container {
             width: 320px;
@@ -277,15 +297,11 @@
         document.querySelectorAll('.bubble').forEach(bubble => {
             bubble.style.cursor = 'crosshair'; // Endre musepeker for å indikere klikkbarhet for piler
             bubble.addEventListener('click', (event) => {
-                // Ikke la klikk på boble forstyrre tekstredigering for mye, men vi trenger klikket for piler.
-                // event.stopPropagation(); // Kan være problematisk for contenteditable fokus
-
                 if (!startBubbleNode) {
                     startBubbleNode = bubble;
                     bubble.classList.add('selected-bubble'); // Visuell markering
                     statusDisplay.textContent = `Startboble: ${bubble.id}. Klikk endeboble... (Farge: ${selectedArrowColor})`;
                 } else {
-                    // Sjekk at man ikke klikker på samme boble to ganger
                     if (startBubbleNode === bubble) {
                         startBubbleNode.classList.remove('selected-bubble');
                         startBubbleNode = null;
@@ -304,14 +320,12 @@
         });
 
         function getBubbleCenter(bubbleElement) {
-            // Bobler er absolutt posisjonert ift. diagram-container
             const centerX = bubbleElement.offsetLeft + bubbleElement.offsetWidth / 2;
             const centerY = bubbleElement.offsetTop + bubbleElement.offsetHeight / 2;
             return { x: centerX, y: centerY };
         }
 
         function drawArrow(startNode, endNode, color) {
-            // Gi ID hvis boblen ikke har en (burde ikke skje med de predefinerte)
             const startId = startNode.id || `bubble-start-${Math.random().toString(16).slice(2)}`;
             if (!startNode.id) startNode.id = startId;
             const endId = endNode.id || `bubble-end-${Math.random().toString(16).slice(2)}`;
@@ -333,13 +347,11 @@
             arrows.push({ startId: startNode.id, endId: endNode.id, color: color, lineElement: line });
         }
 
-        // Funksjonalitet for å slette piler
         document.getElementById('clearLastArrow').addEventListener('click', () => {
             const lastArrow = arrows.pop();
             if (lastArrow && lastArrow.lineElement) {
                 lastArrow.lineElement.remove();
             }
-            // Hvis en boble var valgt som startpunkt, avbryt valget
             if (startBubbleNode) {
                 startBubbleNode.classList.remove('selected-bubble');
                 startBubbleNode = null;
@@ -353,7 +365,7 @@
             arrows.forEach(arrow => {
                 if (arrow.lineElement) arrow.lineElement.remove();
             });
-            arrows.length = 0; // Tøm arrayet
+            arrows.length = 0; 
             if (startBubbleNode) {
                 startBubbleNode.classList.remove('selected-bubble');
                 startBubbleNode = null;
