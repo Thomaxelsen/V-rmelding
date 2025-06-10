@@ -78,6 +78,7 @@
             border: 1px solid var(--border-color);
             padding: 1.5rem;
             border-radius: 8px;
+            background-color: #ffffff; /* Sørger for hvit bakgrunn for PNG eksport */
         }
 
         .input-group {
@@ -148,6 +149,20 @@
             color: var(--primary-color);
             text-align: center;
             width: 100%;
+            margin-top: 0;
+        }
+
+        /* Tittel for rapporten, skjult som standard */
+        .report-title {
+            display: none;
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: normal;
+            font-style: italic;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
         }
 
         #recommendation-box {
@@ -168,12 +183,10 @@
             font-weight: 500;
         }
 
-        /* Fargeklasser for anbefaling */
         .low { background-color: var(--low-news-value); color: white; }
         .medium { background-color: var(--medium-news-value); color: white; }
         .high { background-color: var(--high-news-value); color: white; }
         
-        /* Knapper for eksport */
         .export-buttons {
             display: flex;
             gap: 1rem;
@@ -197,57 +210,33 @@
         .export-buttons button:hover {
             background-color: #004a8d;
         }
-        
-        .print-only {
-            display: none;
-        }
 
         /* STILARK FOR UTSKRIFT (PDF) */
         @media print {
             body {
-                background-color: white;
-                padding: 0;
-                font-size: 12pt;
+                background-color: white; padding: 0; font-size: 12pt;
             }
-
             .container {
-                box-shadow: none;
-                max-width: 100%;
-                padding: 1cm;
+                box-shadow: none; max-width: 100%; padding: 1cm;
             }
-            
-            /* Skjul elementer som ikke skal med i rapporten */
-            header p, .controls, .export-buttons {
+            header, .controls, .export-buttons {
                 display: none;
             }
-            
             .content-wrapper {
-                flex-direction: column;
-                gap: 0;
+                flex-direction: column; gap: 0;
             }
-
             .results {
-                border: none;
-                padding: 0;
-                page-break-inside: avoid; /* Unngå at resultatboksen deles over to sider */
+                border: none; padding: 0; page-break-inside: avoid;
             }
-            
+            .report-title {
+                display: block !important;
+            }
             #recommendation-box {
                 border: 2px solid #333;
             }
-            
-            /* Sørg for at farger på anbefalingsboksen skrives ut */
             .low { background-color: var(--low-news-value) !important; color: white !important; }
             .medium { background-color: var(--medium-news-value) !important; color: white !important; }
             .high { background-color: var(--high-news-value) !important; color: white !important; }
-            
-            .print-only {
-                display: block;
-                text-align: center;
-                margin-bottom: 1rem;
-            }
-            
-            /* Tving utskrift av graf-farger */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -299,10 +288,8 @@
             </div>
 
             <div class="results" id="results-section">
-                <div class="print-only">
-                    <h2>Rapport fra Nyhetskalkulator</h2>
-                    <h3 id="print-title"></h3>
-                </div>
+                <h3 id="report-story-title" class="report-title"></h3>
+                
                 <h2>Resultat</h2>
                 <canvas id="news-chart"></canvas>
                 <div id="recommendation-box">
@@ -331,7 +318,7 @@
         const recommendationBox = document.getElementById('recommendation-box');
         const recommendationText = document.getElementById('recommendation-text');
         const storyTitleInput = document.getElementById('story-title');
-        const printTitleEl = document.getElementById('print-title');
+        const reportStoryTitleEl = document.getElementById('report-story-title');
         const ctx = document.getElementById('news-chart').getContext('2d');
         const exportPdfBtn = document.getElementById('export-pdf-btn');
         const exportPngBtn = document.getElementById('export-png-btn');
@@ -339,8 +326,7 @@
 
         // Initialiserer Radar-diagrammet med Chart.js
         const newsChart = new Chart(ctx, {
-            type: 'radar',
-            data: {
+            type: 'radar', data: {
                 labels: ['Vesentlighet', 'Identifikasjon', 'Sensasjon', 'Aktualitet', 'Konflikt'],
                 datasets: [{
                     label: 'Nyhetsverdi', data: [5, 5, 5, 5, 5],
@@ -351,19 +337,18 @@
             },
             options: {
                 responsive: true, maintainAspectRatio: true,
-                scales: {
-                    r: {
-                        angleLines: { display: true },
-                        suggestedMin: 0, suggestedMax: 10,
-                        ticks: { stepSize: 2 },
-                        pointLabels: { font: { size: 14, weight: 'bold' } }
-                    }
-                },
+                scales: { r: {
+                    angleLines: { display: true },
+                    suggestedMin: 0, suggestedMax: 10,
+                    ticks: { stepSize: 2 },
+                    pointLabels: { font: { size: 14, weight: 'bold' } }
+                }},
                 plugins: { legend: { display: false } }
             }
         });
 
-        function updateEvaluation() {
+        function updateEvaluation() { /* ... (samme som før) ... */ }
+        updateEvaluation = function() {
             let total = 0;
             sliders.forEach(slider => {
                 const id = slider.id;
@@ -371,20 +356,15 @@
                 valueDisplays[id].textContent = value;
                 total += value;
             });
-            
             const averageScore = total / sliders.length;
             totalScoreEl.textContent = `Total Nyhetsverdi: ${averageScore.toFixed(1)} / 10`;
-
             const chartDataOrder = [
-                parseInt(document.getElementById('vesentlighet').value),
-                parseInt(document.getElementById('identifikasjon').value),
-                parseInt(document.getElementById('sensasjon').value),
-                parseInt(document.getElementById('aktualitet').value),
+                parseInt(document.getElementById('vesentlighet').value), parseInt(document.getElementById('identifikasjon').value),
+                parseInt(document.getElementById('sensasjon').value), parseInt(document.getElementById('aktualitet').value),
                 parseInt(document.getElementById('konflikt').value)
             ];
             newsChart.data.datasets[0].data = chartDataOrder;
             newsChart.update();
-
             recommendationBox.className = '';
             if (averageScore >= 7.5) {
                 recommendationText.textContent = 'Høy nyhetsverdi! Dette er en sterk sak som bør prioriteres.';
@@ -396,31 +376,32 @@
                 recommendationText.textContent = 'Lav nyhetsverdi. Saken egner seg trolig ikke som en hovedsak.';
                 recommendationBox.classList.add('low');
             }
-        }
+        };
 
         sliders.forEach(slider => slider.addEventListener('input', updateEvaluation));
 
         // Event listener for PDF-eksport
         exportPdfBtn.addEventListener('click', () => {
-            const storyTitle = storyTitleInput.value || "Uten tittel";
-            printTitleEl.textContent = `Sak: "${storyTitle}"`;
+            const storyTitle = storyTitleInput.value.trim();
+            reportStoryTitleEl.textContent = storyTitle ? `Sak: "${storyTitle}"` : 'Vurdering (uten tittel)';
             window.print();
         });
 
         // Event listener for PNG-eksport
         exportPngBtn.addEventListener('click', () => {
-            // Bruker html2canvas til å ta bilde av resultat-seksjonen
-            html2canvas(resultsSection, {
-                // Sørger for at bakgrunnen i canvas-grafen blir med
-                onclone: (document, element) => {
-                    element.style.backgroundColor = 'white';
-                }
-            }).then(canvas => {
-                // Lager en nedlastingslenke
+            const storyTitle = storyTitleInput.value.trim();
+            reportStoryTitleEl.textContent = storyTitle ? `Sak: "${storyTitle}"` : 'Vurdering (uten tittel)';
+            
+            // Gjør tittelen synlig FØR skjermbildet tas
+            reportStoryTitleEl.style.display = 'block';
+
+            html2canvas(resultsSection).then(canvas => {
+                // Skjul tittelen igjen ETTER at bildet er tatt, for å rydde opp
+                reportStoryTitleEl.style.display = 'none';
+
                 const link = document.createElement('a');
-                const storyTitle = storyTitleInput.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                const fileName = storyTitle ? `nyhetsrapport_${storyTitle}.png` : 'nyhetsrapport.png';
-                link.download = fileName;
+                const safeFileName = storyTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                link.download = safeFileName ? `nyhetsrapport_${safeFileName}.png` : 'nyhetsrapport.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             });
