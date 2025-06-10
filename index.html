@@ -3,376 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbeidsark for casearbeid med relasjonell koordinering</title>
+    <title>Nyhetskalkulator (VISAK)</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
+        /* Grunnleggende CSS for layout og design */
+        :root {
+            --primary-color: #003366; /* Mørk blå */
+            --secondary-color: #f4f4f9; /* Lys grå bakgrunn */
+            --text-color: #333;
+            --border-color: #ddd;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --accent-color: #d9534f; /* Rød aksent */
+            
+            /* Anbefalingsfarger */
+            --high-news-value: #5cb85c; /* Grønn */
+            --medium-news-value: #f0ad4e; /* Oransje */
+            --low-news-value: #d9534f; /* Rød */
+        }
+
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background-color: #f8f9fa;
-            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        header p {
+            font-style: italic;
+            color: #666;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .controls {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .results {
+            flex: 1;
+            min-width: 300px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .main-title {
-            text-align: center;
-            color: #333;
-            font-size: 1.8em;
-            margin-bottom: 20px; /* Reduced margin */
+
+        .input-group {
+            margin-bottom: 1.5rem;
         }
 
-        .controls {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            display: flex;
-            flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
-            align-items: center;
-            gap: 8px;
-            max-width: 900px; /* Align with diagram width */
-            justify-content: center;
-        }
-        .controls span {
-            font-size: 0.9em;
-        }
-        .controls button {
-            padding: 6px 12px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
-            cursor: pointer;
-            background-color: #fff;
-            font-size: 0.85em;
-        }
-        .controls button:hover {
-            border-color: #6c757d;
-            background-color: #f8f9fa;
-        }
-        .controls .color-btn.selected-color-btn {
-            border-width: 2px;
-            border-color: #343a40 !important;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-        #arrow-mode-status {
-            font-style: italic;
-            color: #495057;
-            margin: 0 10px;
-        }
-
-        .page-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 30px;
-            width: 100%;
-            max-width: 1350px;
-            margin: 0 auto;
-        }
-        .diagram-container {
-            position: relative;
-            width: 900px;
-            height: 750px;
-            flex-shrink: 0;
-        }
-        #arrow-svg-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Allows clicks to pass through to bubbles */
-            z-index: 1; 
-        }
-
-        .bubble {
-            position: absolute;
-            border: 2px solid #007bff;
-            background-color: #ffffff;
-            padding: 12px 18px; /* Total padding: horizontal 36px, vertical 24px */
-            border-radius: 60px;
-            text-align: center;
-            min-width: 130px; /* Content width before padding */
-            max-width: 180px; /* Content width before padding */
-            min-height: 35px;  /* Content height before padding */
-            /* Effective visual width approx: max-width + 36 (padding) + 4 (border) = 220px */
-            /* Effective visual height approx: min-height + 24 (padding) + 4 (border) = 63px */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: text; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            font-size: 0.85em;
-            line-height: 1.3;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            z-index: 2; 
-        }
-        .bubble.selected-bubble { 
-            outline: 3px dashed #fd7e14; 
-            outline-offset: 2px;
-        }
-        .bubble[contenteditable="true"]:focus {
-            outline: 2px solid #0056b3;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
-        .bubble[contenteditable="true"]:empty:before {
-            content: "Tekst...";
-            color: #999;
-            font-style: italic;
-        }
-        .central-bubble {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #e6f7ff;
-            border-color: #0056b3;
-            padding: 20px 30px;
-            min-width: 180px;
-            max-width: 220px;
-            font-size: 0.95em;
+        .input-group label {
+            display: block;
             font-weight: bold;
+            margin-bottom: 0.5rem;
         }
 
-        /* Nye symmetriske posisjoner for ytre bobler */
-        /* Senter (cx, cy) = (450, 375) */
-        /* Radiuser for ellipse (a, b) = (360, 280) */
-        /* Boble offset (x,y) basert på ca. 180px bredde, 63px høyde = (90, 31.5) */
-
-        /* k=0: Topp */
-        #bubble1 { top: 64px; left: 360px; } /* Nettverk ifbm. akuttinnskr. */
-        /* k=1: Topp-høyre */
-        #bubble2 { top: 101px; left: 540px; } /* Team/Samarbeidsutv. */
-        /* k=2 */
-        #bubble3 { top: 204px; left: 672px; } /* Regionens */
-        /* k=3: Høyre midt */
-        #bubble4 { top: 344px; left: 720px; } /* Regionleder */
-        /* k=4 */
-        #bubble5 { top: 484px; left: 672px; } /* Regionteam */
-        /* k=5: Bunn-høyre */
-        #bubble6 { top: 586px; left: 540px; } /* Samarbeidspartnere */
-        /* k=6: Bunn midt */
-        #bubble7 { top: 624px; left: 360px; } /* Regionalnettverk */
-        /* k=7: Bunn-venstre */
-        #bubble8 { top: 586px; left: 180px; } /* Regionteam */
-        /* k=8 */
-        #bubble9 { top: 484px; left: 48px;  } /* Nettverk lokalt/kommunalt */
-        /* k=9: Venstre midt */
-        #bubble10 { top: 344px; left: 0px;  } /* Region-telen */
-        /* k=10 */
-        #bubble11 { top: 204px; left: 48px;  } /* Team møt */
-        /* k=11: Topp-venstre */
-        #bubble12 { top: 101px; left: 180px; } /* Seksjonsledermøt. */
-
-
-        .case-box-container {
-            width: 320px;
-            padding: 20px;
-            border: 2px solid #28a745;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-top: 0;
-        }
-        .case-box-container h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #28a745;
-            text-align: center;
-            font-size: 1.3em;
-        }
-        .case-box-content {
-            min-height: 150px;
+        .input-group input[type="text"] {
+            width: 100%;
             padding: 10px;
-            border: 1px solid #ced4da;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
-            background-color: #f8f9fa;
-            cursor: text;
-            font-size: 0.9em;
-            line-height: 1.4;
+            font-size: 1rem;
         }
-        .case-box-content[contenteditable="true"]:focus {
-            outline: 2px solid #1e7e34;
-            box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+
+        .criterion {
+            margin-bottom: 1rem;
         }
-        .case-box-content[contenteditable="true"]:empty:before {
-            content: "Beskriv case, problemstilling, og skriv ned hva du ønsker å oppnå...";
-            color: #999;
-            font-style: italic;
+
+        .criterion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
+        .criterion-header label {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .criterion-header .value-display {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        
+        details {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 0.5rem;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        #recommendation-box {
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        #recommendation-box h3 {
+            margin-top: 0;
+        }
+        
+        #recommendation-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Fargeklasser for anbefaling */
+        .low {
+            background-color: var(--low-news-value);
+            color: white;
+        }
+        .medium {
+            background-color: var(--medium-news-value);
+            color: white;
+        }
+        .high {
+            background-color: var(--high-news-value);
+            color: white;
+        }
+
     </style>
 </head>
 <body>
 
-    <h1 class="main-title">Arbeidsark for casearbeid med relasjonell koordinering</h1>
+    <div class="container">
+        <header>
+            <h1>Nyhetskalkulator</h1>
+            <p>Vurder en saks nyhetsverdi basert på VISAK-kriteriene.</p>
+        </header>
 
-    <div class="controls">
-        <span>Pilfarge:</span>
-        <button class="color-btn" data-color="green" style="background-color:green; color:white;">Grønn</button>
-        <button class="color-btn" data-color="blue" style="background-color:blue; color:white;">Blå</button>
-        <button class="color-btn" data-color="red" style="background-color:red; color:white;">Rød</button>
-        <button class="color-btn" data-color="black" style="background-color:black; color:white;">Svart</button>
-        <span id="arrow-mode-status">Velg farge, klikk deretter første boble...</span>
-        <button id="clearLastArrow">Slett siste pil</button>
-        <button id="clearAllArrows">Slett alle piler</button>
-    </div>
+        <div class="content-wrapper">
+            <div class="controls">
+                <h2>Vekting av kriterier</h2>
+                <div class="input-group">
+                    <label for="story-title">Sak / Tittel (valgfritt)</label>
+                    <input type="text" id="story-title" placeholder="Skriv inn tittel på saken her...">
+                </div>
 
-    <div class="page-wrapper">
-        <div class="diagram-container">
-            <svg id="arrow-svg-layer">
-                <defs>
-                    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="green">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="blue">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                    <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="red">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                    <marker id="arrowhead-black" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="black">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                </defs>
-            </svg>
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <label for="vesentlighet">Vesentlighet</label>
+                        <span id="vesentlighet-value" class="value-display">5</span>
+                    </div>
+                    <input type="range" id="vesentlighet" class="visak-slider" min="0" max="10" value="5">
+                    <details>
+                        <summary>Hva betyr Vesentlighet?</summary>
+                        <p>Hvor viktig er saken for mange mennesker? Handler den om noe grunnleggende i samfunnet (politikk, økonomi, helse)?</p>
+                    </details>
+                </div>
 
-            <div class="bubble central-bubble" id="centralBubble" contenteditable="true">Mitt team/min enhet/meg</div>
-            <div class="bubble" id="bubble1" contenteditable="true">Nettverk ifbm. akuttinnskr.</div>
-            <div class="bubble" id="bubble2" contenteditable="true">Team/Samarbeidsutv.</div>
-            <div class="bubble" id="bubble3" contenteditable="true">Regionens</div>
-            <div class="bubble" id="bubble4" contenteditable="true">Regionleder</div>
-            <div class="bubble" id="bubble5" contenteditable="true">Regionteam</div>
-            <div class="bubble" id="bubble6" contenteditable="true">Samarbeidspartnere</div>
-            <div class="bubble" id="bubble7" contenteditable="true">Regionalnettverk</div>
-            <div class="bubble" id="bubble8" contenteditable="true">Regionteam</div>
-            <div class="bubble" id="bubble9" contenteditable="true">Nettverk lokalt/kommunalt</div>
-            <div class="bubble" id="bubble10" contenteditable="true">Region-telen</div>
-            <div class="bubble" id="bubble11" contenteditable="true">Team møt</div>
-            <div class="bubble" id="bubble12" contenteditable="true">Seksjonsledermøt.</div>
-        </div>
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <label for="identifikasjon">Identifikasjon</label>
+                        <span id="identifikasjon-value" class="value-display">5</span>
+                    </div>
+                    <input type="range" id="identifikasjon" class="visak-slider" min="0" max="10" value="5">
+                    <details>
+                        <summary>Hva betyr Identifikasjon?</summary>
+                        <p>Kan leseren kjenne seg igjen i personene eller situasjonen? Er saken geografisk eller kulturelt nær?</p>
+                    </details>
+                </div>
 
-        <div class="case-box-container">
-            <h2>Ditt case:</h2>
-            <div class="case-box-content" contenteditable="true"></div>
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <label for="sensasjon">Sensasjon</label>
+                        <span id="sensasjon-value" class="value-display">5</span>
+                    </div>
+                    <input type="range" id="sensasjon" class="visak-slider" min="0" max="10" value="5">
+                     <details>
+                        <summary>Hva betyr Sensasjon?</summary>
+                        <p>Er saken uvanlig, dramatisk, sjokkerende eller spektakulær? Inneholder den store tall eller "første gang"-elementer?</p>
+                    </details>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <label for="aktualitet">Aktualitet</label>
+                        <span id="aktualitet-value" class="value-display">5</span>
+                    </div>
+                    <input type="range" id="aktualitet" class="visak-slider" min="0" max="10" value="5">
+                    <details>
+                        <summary>Hva betyr Aktualitet?</summary>
+                        <p>Er saken "fersk"? Har det skjedd noe akkurat nå, eller er den knyttet til noe som er på dagsordenen?</p>
+                    </details>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <label for="konflikt">Konflikt</label>
+                        <span id="konflikt-value" class="value-display">5</span>
+                    </div>
+                    <input type="range" id="konflikt" class="visak-slider" min="0" max="10" value="5">
+                    <details>
+                        <summary>Hva betyr Konflikt?</summary>
+                        <p>Er det en strid mellom to eller flere parter? Handler saken om uenighet, forbrytelser, krig eller konkurranse?</p>
+                    </details>
+                </div>
+            </div>
+
+            <div class="results">
+                <h2>Resultat</h2>
+                <canvas id="news-chart"></canvas>
+                <div id="recommendation-box">
+                    <h3 id="total-score">Total Nyhetsverdi: 5.0 / 10</h3>
+                    <p id="recommendation-text">Saken har middels nyhetsverdi.</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Forhindre liming av rik tekst
-        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
-            el.addEventListener('paste', function(e) {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                document.execCommand('insertText', false, text);
-            });
-        });
+        // Henter inn alle relevante HTML-elementer
+        const sliders = document.querySelectorAll('.visak-slider');
+        const valueDisplays = {
+            vesentlighet: document.getElementById('vesentlighet-value'),
+            identifikasjon: document.getElementById('identifikasjon-value'),
+            sensasjon: document.getElementById('sensasjon-value'),
+            aktualitet: document.getElementById('aktualitet-value'),
+            konflikt: document.getElementById('konflikt-value'),
+        };
+        const totalScoreEl = document.getElementById('total-score');
+        const recommendationBox = document.getElementById('recommendation-box');
+        const recommendationText = document.getElementById('recommendation-text');
+        const ctx = document.getElementById('news-chart').getContext('2d');
 
-        // --- Ny JavaScript for piltegning ---
-        let startBubbleNode = null;
-        let selectedArrowColor = 'black'; // Standardfarge
-        const arrows = []; // Lagrer { startId, endId, color, lineElement }
-        const svgLayer = document.getElementById('arrow-svg-layer');
-        const statusDisplay = document.getElementById('arrow-mode-status');
-        const diagramContainer = document.querySelector('.diagram-container');
-
-        // Velg fargeknapper
-        document.querySelectorAll('.controls .color-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                selectedArrowColor = button.getAttribute('data-color');
-                document.querySelectorAll('.controls .color-btn').forEach(btn => btn.classList.remove('selected-color-btn'));
-                button.classList.add('selected-color-btn');
-                if (!startBubbleNode) {
-                    statusDisplay.textContent = `Farge ${selectedArrowColor} valgt. Klikk første boble...`;
-                } else {
-                    statusDisplay.textContent = `Farge ${selectedArrowColor} valgt. Startboble: ${startBubbleNode.id}. Klikk endeboble...`;
-                }
-            });
-        });
-        // Velg svart knapp som standard ved lasting
-        document.querySelector('.controls .color-btn[data-color="black"]').classList.add('selected-color-btn');
-
-        // Klikklytter for bobler
-        document.querySelectorAll('.bubble').forEach(bubble => {
-            bubble.style.cursor = 'crosshair'; // Endre musepeker for å indikere klikkbarhet for piler
-            bubble.addEventListener('click', (event) => {
-                if (!startBubbleNode) {
-                    startBubbleNode = bubble;
-                    bubble.classList.add('selected-bubble'); // Visuell markering
-                    statusDisplay.textContent = `Startboble: ${bubble.id}. Klikk endeboble... (Farge: ${selectedArrowColor})`;
-                } else {
-                    if (startBubbleNode === bubble) {
-                        startBubbleNode.classList.remove('selected-bubble');
-                        startBubbleNode = null;
-                        statusDisplay.textContent = `Valg av startboble kansellert. Velg farge, klikk første boble...`;
-                        return;
+        // Initialiserer Radar-diagrammet med Chart.js
+        const newsChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Vesentlighet', 'Identifikasjon', 'Sensasjon', 'Aktualitet', 'Konflikt'],
+                datasets: [{
+                    label: 'Nyhetsverdi',
+                    data: [5, 5, 5, 5, 5], // Startverdier
+                    backgroundColor: 'rgba(0, 51, 102, 0.2)',
+                    borderColor: 'rgba(0, 51, 102, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(0, 51, 102, 1)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 10,
+                        ticks: {
+                           stepSize: 2 
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
                     }
-
-                    const endBubbleNode = bubble;
-                    drawArrow(startBubbleNode, endBubbleNode, selectedArrowColor);
-                    
-                    startBubbleNode.classList.remove('selected-bubble'); // Fjern markering
-                    startBubbleNode = null;
-                    statusDisplay.textContent = `Pil tegnet. Velg farge, klikk første boble...`;
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
-            });
+            }
         });
 
-        function getBubbleCenter(bubbleElement) {
-            const centerX = bubbleElement.offsetLeft + bubbleElement.offsetWidth / 2;
-            const centerY = bubbleElement.offsetTop + bubbleElement.offsetHeight / 2;
-            return { x: centerX, y: centerY };
-        }
+        // Funksjon for å oppdatere alle verdier, graf og anbefaling
+        function updateEvaluation() {
+            let total = 0;
+            const currentValues = [];
 
-        function drawArrow(startNode, endNode, color) {
-            const startId = startNode.id || `bubble-start-${Math.random().toString(16).slice(2)}`;
-            if (!startNode.id) startNode.id = startId;
-            const endId = endNode.id || `bubble-end-${Math.random().toString(16).slice(2)}`;
-            if (!endNode.id) endNode.id = endId;
-
-            const startCoords = getBubbleCenter(startNode);
-            const endCoords = getBubbleCenter(endNode);
-
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', String(startCoords.x));
-            line.setAttribute('y1', String(startCoords.y));
-            line.setAttribute('x2', String(endCoords.x));
-            line.setAttribute('y2', String(endCoords.y));
-            line.setAttribute('stroke', color);
-            line.setAttribute('stroke-width', '2.5');
-            line.setAttribute('marker-end', `url(#arrowhead-${color})`);
+            // Går gjennom hver slider
+            sliders.forEach(slider => {
+                const id = slider.id;
+                const value = parseInt(slider.value, 10);
+                
+                // Oppdaterer tall-displayet ved siden av slideren
+                valueDisplays[id].textContent = value;
+                
+                // Legger til i totalsum og i listen for grafen
+                total += value;
+                currentValues.push(value);
+            });
             
-            svgLayer.appendChild(line);
-            arrows.push({ startId: startNode.id, endId: endNode.id, color: color, lineElement: line });
+            // Regner ut gjennomsnittsscore
+            const averageScore = total / sliders.length;
+            totalScoreEl.textContent = `Total Nyhetsverdi: ${averageScore.toFixed(1)} / 10`;
+
+            // Oppdaterer data i grafen
+            // Rekkefølgen må matche label-rekkefølgen i chart-config
+            const chartDataOrder = [
+                parseInt(document.getElementById('vesentlighet').value),
+                parseInt(document.getElementById('identifikasjon').value),
+                parseInt(document.getElementById('sensasjon').value),
+                parseInt(document.getElementById('aktualitet').value),
+                parseInt(document.getElementById('konflikt').value)
+            ];
+            newsChart.data.datasets[0].data = chartDataOrder;
+            newsChart.update();
+
+            // Oppdaterer anbefaling og farge på boksen
+            recommendationBox.className = ''; // Fjerner gamle klasser
+            if (averageScore >= 7.5) {
+                recommendationText.textContent = 'Høy nyhetsverdi! Dette er en sterk sak som bør prioriteres.';
+                recommendationBox.classList.add('high');
+            } else if (averageScore >= 4.0) {
+                recommendationText.textContent = 'Middels nyhetsverdi. Saken kan være aktuell, vurder vinkling og prioritering.';
+                recommendationBox.classList.add('medium');
+            } else {
+                recommendationText.textContent = 'Lav nyhetsverdi. Saken egner seg trolig ikke som en hovedsak.';
+                recommendationBox.classList.add('low');
+            }
         }
 
-        document.getElementById('clearLastArrow').addEventListener('click', () => {
-            const lastArrow = arrows.pop();
-            if (lastArrow && lastArrow.lineElement) {
-                lastArrow.lineElement.remove();
-            }
-            if (startBubbleNode) {
-                startBubbleNode.classList.remove('selected-bubble');
-                startBubbleNode = null;
-                statusDisplay.textContent = 'Valg av startboble kansellert. Velg farge, klikk første boble...';
-            } else {
-                 statusDisplay.textContent = 'Siste pil slettet. Velg farge, klikk første boble...';
-            }
+        // Legger til en event listener på hver slider som kaller updateEvaluation-funksjonen
+        sliders.forEach(slider => {
+            slider.addEventListener('input', updateEvaluation);
         });
 
-        document.getElementById('clearAllArrows').addEventListener('click', () => {
-            arrows.forEach(arrow => {
-                if (arrow.lineElement) arrow.lineElement.remove();
-            });
-            arrows.length = 0; 
-            if (startBubbleNode) {
-                startBubbleNode.classList.remove('selected-bubble');
-                startBubbleNode = null;
-            }
-            statusDisplay.textContent = 'Alle piler slettet. Velg farge, klikk første boble...';
-        });
-
+        // Kjører funksjonen en gang ved lasting for å initialisere alt riktig
+        document.addEventListener('DOMContentLoaded', updateEvaluation);
     </script>
 
 </body>
