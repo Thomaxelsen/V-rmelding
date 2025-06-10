@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nyhetskalkulator (VISAK)</title>
+    <title>Nyhetskalkulator (VISAK) med eksport</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         /* Grunnleggende CSS for layout og design */
@@ -15,7 +16,6 @@
             --text-color: #333;
             --border-color: #ddd;
             --shadow-color: rgba(0, 0, 0, 0.1);
-            --accent-color: #d9534f; /* Rød aksent */
             
             /* Anbefalingsfarger */
             --high-news-value: #5cb85c; /* Grønn */
@@ -75,6 +75,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 8px;
         }
 
         .input-group {
@@ -144,6 +147,7 @@
         h2 {
             color: var(--primary-color);
             text-align: center;
+            width: 100%;
         }
 
         #recommendation-box {
@@ -165,19 +169,90 @@
         }
 
         /* Fargeklasser for anbefaling */
-        .low {
-            background-color: var(--low-news-value);
-            color: white;
-        }
-        .medium {
-            background-color: var(--medium-news-value);
-            color: white;
-        }
-        .high {
-            background-color: var(--high-news-value);
-            color: white;
+        .low { background-color: var(--low-news-value); color: white; }
+        .medium { background-color: var(--medium-news-value); color: white; }
+        .high { background-color: var(--high-news-value); color: white; }
+        
+        /* Knapper for eksport */
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            width: 100%;
         }
 
+        .export-buttons button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .export-buttons button:hover {
+            background-color: #004a8d;
+        }
+        
+        .print-only {
+            display: none;
+        }
+
+        /* STILARK FOR UTSKRIFT (PDF) */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+                font-size: 12pt;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+                padding: 1cm;
+            }
+            
+            /* Skjul elementer som ikke skal med i rapporten */
+            header p, .controls, .export-buttons {
+                display: none;
+            }
+            
+            .content-wrapper {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .results {
+                border: none;
+                padding: 0;
+                page-break-inside: avoid; /* Unngå at resultatboksen deles over to sider */
+            }
+            
+            #recommendation-box {
+                border: 2px solid #333;
+            }
+            
+            /* Sørg for at farger på anbefalingsboksen skrives ut */
+            .low { background-color: var(--low-news-value) !important; color: white !important; }
+            .medium { background-color: var(--medium-news-value) !important; color: white !important; }
+            .high { background-color: var(--high-news-value) !important; color: white !important; }
+            
+            .print-only {
+                display: block;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+            
+            /* Tving utskrift av graf-farger */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -192,77 +267,51 @@
             <div class="controls">
                 <h2>Vekting av kriterier</h2>
                 <div class="input-group">
-                    <label for="story-title">Sak / Tittel (valgfritt)</label>
+                    <label for="story-title">Sak / Tittel (for rapport)</label>
                     <input type="text" id="story-title" placeholder="Skriv inn tittel på saken her...">
                 </div>
 
                 <div class="criterion">
-                    <div class="criterion-header">
-                        <label for="vesentlighet">Vesentlighet</label>
-                        <span id="vesentlighet-value" class="value-display">5</span>
-                    </div>
+                    <div class="criterion-header"><label for="vesentlighet">Vesentlighet</label><span id="vesentlighet-value" class="value-display">5</span></div>
                     <input type="range" id="vesentlighet" class="visak-slider" min="0" max="10" value="5">
-                    <details>
-                        <summary>Hva betyr Vesentlighet?</summary>
-                        <p>Hvor viktig er saken for mange mennesker? Handler den om noe grunnleggende i samfunnet (politikk, økonomi, helse)?</p>
-                    </details>
+                    <details><summary>Hva betyr Vesentlighet?</summary><p>Hvor viktig er saken for mange mennesker? Handler den om noe grunnleggende i samfunnet (politikk, økonomi, helse)?</p></details>
                 </div>
-
                 <div class="criterion">
-                    <div class="criterion-header">
-                        <label for="identifikasjon">Identifikasjon</label>
-                        <span id="identifikasjon-value" class="value-display">5</span>
-                    </div>
+                    <div class="criterion-header"><label for="identifikasjon">Identifikasjon</label><span id="identifikasjon-value" class="value-display">5</span></div>
                     <input type="range" id="identifikasjon" class="visak-slider" min="0" max="10" value="5">
-                    <details>
-                        <summary>Hva betyr Identifikasjon?</summary>
-                        <p>Kan leseren kjenne seg igjen i personene eller situasjonen? Er saken geografisk eller kulturelt nær?</p>
-                    </details>
+                    <details><summary>Hva betyr Identifikasjon?</summary><p>Kan leseren kjenne seg igjen i personene eller situasjonen? Er saken geografisk eller kulturelt nær?</p></details>
                 </div>
-
                 <div class="criterion">
-                    <div class="criterion-header">
-                        <label for="sensasjon">Sensasjon</label>
-                        <span id="sensasjon-value" class="value-display">5</span>
-                    </div>
+                    <div class="criterion-header"><label for="sensasjon">Sensasjon</label><span id="sensasjon-value" class="value-display">5</span></div>
                     <input type="range" id="sensasjon" class="visak-slider" min="0" max="10" value="5">
-                     <details>
-                        <summary>Hva betyr Sensasjon?</summary>
-                        <p>Er saken uvanlig, dramatisk, sjokkerende eller spektakulær? Inneholder den store tall eller "første gang"-elementer?</p>
-                    </details>
+                    <details><summary>Hva betyr Sensasjon?</summary><p>Er saken uvanlig, dramatisk, sjokkerende eller spektakulær? Inneholder den store tall eller "første gang"-elementer?</p></details>
                 </div>
-
                 <div class="criterion">
-                    <div class="criterion-header">
-                        <label for="aktualitet">Aktualitet</label>
-                        <span id="aktualitet-value" class="value-display">5</span>
-                    </div>
+                    <div class="criterion-header"><label for="aktualitet">Aktualitet</label><span id="aktualitet-value" class="value-display">5</span></div>
                     <input type="range" id="aktualitet" class="visak-slider" min="0" max="10" value="5">
-                    <details>
-                        <summary>Hva betyr Aktualitet?</summary>
-                        <p>Er saken "fersk"? Har det skjedd noe akkurat nå, eller er den knyttet til noe som er på dagsordenen?</p>
-                    </details>
+                    <details><summary>Hva betyr Aktualitet?</summary><p>Er saken "fersk"? Har det skjedd noe akkurat nå, eller er den knyttet til noe som er på dagsordenen?</p></details>
                 </div>
-
                 <div class="criterion">
-                    <div class="criterion-header">
-                        <label for="konflikt">Konflikt</label>
-                        <span id="konflikt-value" class="value-display">5</span>
-                    </div>
+                    <div class="criterion-header"><label for="konflikt">Konflikt</label><span id="konflikt-value" class="value-display">5</span></div>
                     <input type="range" id="konflikt" class="visak-slider" min="0" max="10" value="5">
-                    <details>
-                        <summary>Hva betyr Konflikt?</summary>
-                        <p>Er det en strid mellom to eller flere parter? Handler saken om uenighet, forbrytelser, krig eller konkurranse?</p>
-                    </details>
+                    <details><summary>Hva betyr Konflikt?</summary><p>Er det en strid mellom to eller flere parter? Handler saken om uenighet, forbrytelser, krig eller konkurranse?</p></details>
                 </div>
             </div>
 
-            <div class="results">
+            <div class="results" id="results-section">
+                <div class="print-only">
+                    <h2>Rapport fra Nyhetskalkulator</h2>
+                    <h3 id="print-title"></h3>
+                </div>
                 <h2>Resultat</h2>
                 <canvas id="news-chart"></canvas>
                 <div id="recommendation-box">
                     <h3 id="total-score">Total Nyhetsverdi: 5.0 / 10</h3>
                     <p id="recommendation-text">Saken har middels nyhetsverdi.</p>
+                </div>
+                <div class="export-buttons">
+                    <button id="export-pdf-btn">Last ned som PDF</button>
+                    <button id="export-png-btn">Last ned som Bilde</button>
                 </div>
             </div>
         </div>
@@ -281,7 +330,12 @@
         const totalScoreEl = document.getElementById('total-score');
         const recommendationBox = document.getElementById('recommendation-box');
         const recommendationText = document.getElementById('recommendation-text');
+        const storyTitleInput = document.getElementById('story-title');
+        const printTitleEl = document.getElementById('print-title');
         const ctx = document.getElementById('news-chart').getContext('2d');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const exportPngBtn = document.getElementById('export-png-btn');
+        const resultsSection = document.getElementById('results-section');
 
         // Initialiserer Radar-diagrammet med Chart.js
         const newsChart = new Chart(ctx, {
@@ -289,67 +343,38 @@
             data: {
                 labels: ['Vesentlighet', 'Identifikasjon', 'Sensasjon', 'Aktualitet', 'Konflikt'],
                 datasets: [{
-                    label: 'Nyhetsverdi',
-                    data: [5, 5, 5, 5, 5], // Startverdier
+                    label: 'Nyhetsverdi', data: [5, 5, 5, 5, 5],
                     backgroundColor: 'rgba(0, 51, 102, 0.2)',
                     borderColor: 'rgba(0, 51, 102, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(0, 51, 102, 1)',
+                    borderWidth: 2, pointBackgroundColor: 'rgba(0, 51, 102, 1)',
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: true,
+                responsive: true, maintainAspectRatio: true,
                 scales: {
                     r: {
-                        angleLines: {
-                            display: true
-                        },
-                        suggestedMin: 0,
-                        suggestedMax: 10,
-                        ticks: {
-                           stepSize: 2 
-                        },
-                        pointLabels: {
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            }
-                        }
+                        angleLines: { display: true },
+                        suggestedMin: 0, suggestedMax: 10,
+                        ticks: { stepSize: 2 },
+                        pointLabels: { font: { size: 14, weight: 'bold' } }
                     }
                 },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
+                plugins: { legend: { display: false } }
             }
         });
 
-        // Funksjon for å oppdatere alle verdier, graf og anbefaling
         function updateEvaluation() {
             let total = 0;
-            const currentValues = [];
-
-            // Går gjennom hver slider
             sliders.forEach(slider => {
                 const id = slider.id;
                 const value = parseInt(slider.value, 10);
-                
-                // Oppdaterer tall-displayet ved siden av slideren
                 valueDisplays[id].textContent = value;
-                
-                // Legger til i totalsum og i listen for grafen
                 total += value;
-                currentValues.push(value);
             });
             
-            // Regner ut gjennomsnittsscore
             const averageScore = total / sliders.length;
             totalScoreEl.textContent = `Total Nyhetsverdi: ${averageScore.toFixed(1)} / 10`;
 
-            // Oppdaterer data i grafen
-            // Rekkefølgen må matche label-rekkefølgen i chart-config
             const chartDataOrder = [
                 parseInt(document.getElementById('vesentlighet').value),
                 parseInt(document.getElementById('identifikasjon').value),
@@ -360,8 +385,7 @@
             newsChart.data.datasets[0].data = chartDataOrder;
             newsChart.update();
 
-            // Oppdaterer anbefaling og farge på boksen
-            recommendationBox.className = ''; // Fjerner gamle klasser
+            recommendationBox.className = '';
             if (averageScore >= 7.5) {
                 recommendationText.textContent = 'Høy nyhetsverdi! Dette er en sterk sak som bør prioriteres.';
                 recommendationBox.classList.add('high');
@@ -374,12 +398,34 @@
             }
         }
 
-        // Legger til en event listener på hver slider som kaller updateEvaluation-funksjonen
-        sliders.forEach(slider => {
-            slider.addEventListener('input', updateEvaluation);
+        sliders.forEach(slider => slider.addEventListener('input', updateEvaluation));
+
+        // Event listener for PDF-eksport
+        exportPdfBtn.addEventListener('click', () => {
+            const storyTitle = storyTitleInput.value || "Uten tittel";
+            printTitleEl.textContent = `Sak: "${storyTitle}"`;
+            window.print();
         });
 
-        // Kjører funksjonen en gang ved lasting for å initialisere alt riktig
+        // Event listener for PNG-eksport
+        exportPngBtn.addEventListener('click', () => {
+            // Bruker html2canvas til å ta bilde av resultat-seksjonen
+            html2canvas(resultsSection, {
+                // Sørger for at bakgrunnen i canvas-grafen blir med
+                onclone: (document, element) => {
+                    element.style.backgroundColor = 'white';
+                }
+            }).then(canvas => {
+                // Lager en nedlastingslenke
+                const link = document.createElement('a');
+                const storyTitle = storyTitleInput.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const fileName = storyTitle ? `nyhetsrapport_${storyTitle}.png` : 'nyhetsrapport.png';
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', updateEvaluation);
     </script>
 
