@@ -15,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
+        /* Standard stiler for skjermvisning */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
@@ -25,16 +26,15 @@
             background-color: #f8f9fa;
             background-image: linear-gradient(to top right, #f0f2f5, #ffffff);
             background-attachment: fixed;
+            transition: background-color 0.3s;
         }
 
         .container { max-width: 1100px; }
         h1, h2, h3 { font-weight: 700; }
 
         .matrix-container {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.75rem;
-            padding: 1.5rem 2rem;
+            background-color: #ffffff; border: 1px solid #dee2e6;
+            border-radius: 0.75rem; padding: 1.5rem 2rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             animation: fadeIn 0.6s ease-out forwards;
         }
@@ -46,7 +46,7 @@
         }
         .matrix-table th[scope="row"] {
             font-weight: 500; padding: 1rem 1rem; vertical-align: middle;
-            border: none; width: 25%;
+            border: none; width: 25%; color: #495057;
         }
         .matrix-table td { padding: 0.4rem; vertical-align: middle; border: none; }
         .matrix-table input[type="radio"] { display: none; }
@@ -78,16 +78,43 @@
         
         #report-header h2 { font-size: 1.75rem; color: #212529; }
         #report-header p { font-size: 1.1rem; color: #495057; }
+        
+        /* --- NYTT: Stiler som KUN gjelder under eksport --- */
+        body.export-in-progress {
+            background-image: none !important;
+            background-color: #ffffff !important;
+        }
+        .export-in-progress .matrix-container,
+        .export-in-progress #result-container {
+            animation: none !important;
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+        }
+        .export-in-progress .matrix-table label {
+            animation: none !important;
+            transition: none !important;
+            box-shadow: none !important;
+            transform: none !important;
+            background-color: #f8f9fa !important;
+            border: 1px solid #cccccc !important;
+        }
+        .export-in-progress .matrix-table th, 
+        .export-in-progress .matrix-table .option-desc,
+        .export-in-progress #report-header h2,
+        .export-in-progress #report-header p {
+             color: #000000 !important;
+        }
+        .export-in-progress input[value="stor"]:checked + label { background-color: #d1e7dd !important; border: 2px solid #198754 !important; }
+        .export-in-progress input[value="middels"]:checked + label { background-color: #fff3cd !important; border: 2px solid #ffc107 !important; }
+        .export-in-progress input[value="liten"]:checked + label { background-color: #cce5ff !important; border: 2px solid #0d6efd !important; }
     </style>
 </head>
 <body>
-
     <div class="container my-5">
         <header class="text-center mb-5">
             <h1>Prioriteringsmatrise for raske beslutninger</h1>
             <p class="lead text-muted">Fyll ut matrisen for å få en anbefaling og eksporter en rapport.</p>
         </header>
-
         <div class="row g-5" id="export-area">
             <div class="col-lg-8">
                 <div class="matrix-container">
@@ -104,58 +131,27 @@
                         </div>
                         <hr class="mb-4">
                     </div>
-                    
                     <div id="report-header" class="d-none mb-4">
                         <h2 id="report-verv-title"></h2>
                         <p id="report-org-title" class="lead"></p>
                         <hr>
                     </div>
-
                     <form id="decision-matrix">
                         <table class="w-100 matrix-table">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Stor betydning</th>
-                                    <th>Middels betydning</th>
-                                    <th>Liten betydning</th>
-                                </tr>
-                            </thead>
+                           <thead><tr><th></th><th>Stor betydning</th><th>Middels betydning</th><th>Liten betydning</th></tr></thead>
                             <tbody>
-                                <tr>
-                                    <th scope="row"><i class="bi bi-building me-2"></i>Organisasjon som utlyser</th>
-                                    <td><input type="radio" id="org_stor" name="organisasjon" value="stor"><label for="org_stor"><span class="option-desc">Strategisk partner</span></label></td>
-                                    <td><input type="radio" id="org_middels" name="organisasjon" value="middels"><label for="org_middels"><span class="option-desc">Nasjonale/regionale aktører</span></label></td>
-                                    <td><input type="radio" id="org_liten" name="organisasjon" value="liten"><label for="org_liten"><span class="option-desc">Lokale/mindre aktører</span></label></td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><i class="bi bi-tags me-2"></i>Tema for vervet</th>
-                                    <td><input type="radio" id="tema_stor" name="tema" value="stor"><label for="tema_stor"><span class="option-desc">Direkte knyttet til mål</span></label></td>
-                                    <td><input type="radio" id="tema_middels" name="tema" value="middels"><label for="tema_middels"><span class="option-desc">Indirekte knyttet til strategi</span></label></td>
-                                    <td><input type="radio" id="tema_liten" name="tema" value="liten"><label for="tema_liten"><span class="option-desc">Marginalt relevant</span></label></td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><i class="bi bi-hourglass-split me-2"></i>Estimert ressursbruk</th>
-                                    <td><input type="radio" id="ressurs_stor" name="ressursbruk" value="stor"><label for="ressurs_stor"><span class="option-desc">Betydelig (ukentlig/mnd)</span></label></td>
-                                    <td><input type="radio" id="ressurs_middels" name="ressursbruk" value="middels"><label for="ressurs_middels"><span class="option-desc">Moderat (&lt;1 dag/mnd)</span></label></td>
-                                    <td><input type="radio" id="ressurs_liten" name="ressursbruk" value="liten"><label for="ressurs_liten"><span class="option-desc">Minimal (sporadisk)</span></label></td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><i class="bi bi-bullseye me-2"></i>Strategisk verdi</th>
-                                    <td><input type="radio" id="verdi_stor" name="verdi" value="stor"><label for="verdi_stor"><span class="option-desc">Klar strategisk gevinst</span></label></td>
-                                    <td><input type="radio" id="verdi_middels" name="verdi" value="middels"><label for="verdi_middels"><span class="option-desc">Nettverk/synlighet</span></label></td>
-                                    <td><input type="radio" id="verdi_liten" name="verdi" value="liten"><label for="verdi_liten"><span class="option-desc">Nyttig, ikke avgjørende</span></label></td>
-                                </tr>
+                                <tr><th scope="row"><i class="bi bi-building me-2"></i>Organisasjon som utlyser</th><td><input type="radio" id="org_stor" name="organisasjon" value="stor"><label for="org_stor"><span class="option-desc">Strategisk partner</span></label></td><td><input type="radio" id="org_middels" name="organisasjon" value="middels"><label for="org_middels"><span class="option-desc">Nasjonale/regionale aktører</span></label></td><td><input type="radio" id="org_liten" name="organisasjon" value="liten"><label for="org_liten"><span class="option-desc">Lokale/mindre aktører</span></label></td></tr>
+                                <tr><th scope="row"><i class="bi bi-tags me-2"></i>Tema for vervet</th><td><input type="radio" id="tema_stor" name="tema" value="stor"><label for="tema_stor"><span class="option-desc">Direkte knyttet til mål</span></label></td><td><input type="radio" id="tema_middels" name="tema" value="middels"><label for="tema_middels"><span class="option-desc">Indirekte knyttet til strategi</span></label></td><td><input type="radio" id="tema_liten" name="tema" value="liten"><label for="tema_liten"><span class="option-desc">Marginalt relevant</span></label></td></tr>
+                                <tr><th scope="row"><i class="bi bi-hourglass-split me-2"></i>Estimert ressursbruk</th><td><input type="radio" id="ressurs_stor" name="ressursbruk" value="stor"><label for="ressurs_stor"><span class="option-desc">Betydelig (ukentlig/mnd)</span></label></td><td><input type="radio" id="ressurs_middels" name="ressursbruk" value="middels"><label for="ressurs_middels"><span class="option-desc">Moderat (&lt;1 dag/mnd)</span></label></td><td><input type="radio" id="ressurs_liten" name="ressursbruk" value="liten"><label for="ressurs_liten"><span class="option-desc">Minimal (sporadisk)</span></label></td></tr>
+                                <tr><th scope="row"><i class="bi bi-bullseye me-2"></i>Strategisk verdi</th><td><input type="radio" id="verdi_stor" name="verdi" value="stor"><label for="verdi_stor"><span class="option-desc">Klar strategisk gevinst</span></label></td><td><input type="radio" id="verdi_middels" name="verdi" value="middels"><label for="verdi_middels"><span class="option-desc">Nettverk/synlighet</span></label></td><td><input type="radio" id="verdi_liten" name="verdi" value="liten"><label for="verdi_liten"><span class="option-desc">Nyttig, ikke avgjørende</span></label></td></tr>
                             </tbody>
                         </table>
                     </form>
                 </div>
             </div>
-
             <div class="col-lg-4">
                 <div id="result-container" class="initial-state">
-                    <h3>Totalvurdering</h3>
-                    <p>Velg ett alternativ for hver rad for å se resultatet.</p>
+                    <h3>Totalvurdering</h3><p>Velg ett alternativ for hver rad for å se resultatet.</p>
                 </div>
                 <div class="export-section">
                      <p class="text-muted small">Ferdig med vurderingen?</p>
@@ -167,12 +163,8 @@
             </div>
         </div>
     </div>
-
     <script>
-        const matrixForm = document.getElementById('decision-matrix');
-        const resultContainer = document.getElementById('result-container');
         const { jsPDF } = window.jspdf;
-
         const exportArea = document.getElementById('export-area');
         const inputSection = document.getElementById('input-section');
         const reportHeader = document.getElementById('report-header');
@@ -188,26 +180,28 @@
             inputSection.classList.add('d-none');
             reportHeader.classList.remove('d-none');
             exportSection.classList.add('d-none');
+            // Aktiverer "utskriftsmodus"
+            document.body.classList.add('export-in-progress');
         };
 
         const cleanupAfterExport = () => {
             inputSection.classList.remove('d-none');
             reportHeader.classList.add('d-none');
             exportSection.classList.remove('d-none');
+            // Deaktiverer "utskriftsmodus"
+            document.body.classList.remove('export-in-progress');
         };
         
-        // --- ENDRING: Optjoner for html2canvas er nå definert sentralt ---
-        const canvasOptions = {
-            scale: 2,
-            backgroundColor: '#ffffff' // Garanterer hvit, solid bakgrunn og fikser falmingsproblemet.
-        };
+        const canvasOptions = { scale: 2, backgroundColor: '#ffffff' };
 
         pngBtn.addEventListener('click', async () => {
             pngBtn.disabled = true;
             pngBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Genererer...`;
             prepareForExport();
+            // Liten forsinkelse for å la nettleseren rendre de nye stilene
+            await new Promise(resolve => setTimeout(resolve, 50));
             try {
-                const canvas = await html2canvas(exportArea, canvasOptions); // Bruker de nye opsjonene
+                const canvas = await html2canvas(exportArea, canvasOptions);
                 const link = document.createElement('a');
                 link.download = 'prioriteringsmatrise.png';
                 link.href = canvas.toDataURL('image/png');
@@ -223,8 +217,9 @@
             pdfBtn.disabled = true;
             pdfBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Genererer...`;
             prepareForExport();
+            await new Promise(resolve => setTimeout(resolve, 50));
             try {
-                const canvas = await html2canvas(exportArea, canvasOptions); // Bruker de nye opsjonene
+                const canvas = await html2canvas(exportArea, canvasOptions);
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = 210;
                 const pageHeight = 297;
@@ -239,13 +234,14 @@
             }
         });
 
+        const matrixForm = document.getElementById('decision-matrix');
+        const resultContainer = document.getElementById('result-container');
         const resultsContent = {
             stor: { title: 'Stor betydning', text: '<strong>Anbefaling:</strong> Sendes til vurderingsforum for strategisk vurdering.', className: 'alert alert-success' },
             middels: { title: 'Middels betydning', text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for vurdering av kandidat og godkjenning.', className: 'alert alert-warning' },
             liten: { title: 'Liten betydning', text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for registrering og oppdatering i bruttolisten.', className: 'alert alert-primary' },
             initial: { title: 'Totalvurdering', text: 'Velg ett alternativ for hver rad for å se resultatet.', className: 'initial-state' }
         };
-
         function calculateResult() {
             const formData = new FormData(matrixForm);
             const selections = Array.from(formData.values());
@@ -260,14 +256,12 @@
             else if (counts.liten >= 3) { finalResult = 'liten'; }
             updateResultDisplay(finalResult);
         }
-
         function updateResultDisplay(resultKey) {
             const content = resultsContent[resultKey];
             resultContainer.className = '';
             resultContainer.classList.add(...content.className.split(' '));
             resultContainer.innerHTML = `<h3>${content.title}</h3><p>${content.text}</p>`;
         }
-        
         matrixForm.addEventListener('change', calculateResult);
         updateResultDisplay('initial');
     </script>
