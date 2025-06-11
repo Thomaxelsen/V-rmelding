@@ -37,7 +37,7 @@
             max-width: 1100px;
         }
         
-        h1 {
+        h1, h2, h3 {
             font-weight: 700;
         }
 
@@ -45,7 +45,7 @@
             background-color: #ffffff;
             border: 1px solid #dee2e6;
             border-radius: 0.75rem;
-            padding: 1.5rem;
+            padding: 1.5rem 2rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             animation: fadeIn 0.6s ease-out forwards;
         }
@@ -109,62 +109,59 @@
             font-weight: 500;
             color: #343a40;
         }
-
-        input[value="stor"]:checked + label {
-            background-color: #d1e7dd;
-            border: 2px solid #198754; /* Grønn */
-        }
         
-        input[value="middels"]:checked + label {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107; /* Oransje */
-        }
-        
-        input[value="liten"]:checked + label {
-            background-color: #cce5ff;
-            border: 2px solid #0d6efd; /* Blå */
-        }
-
-        input:checked + label {
-            padding: calc(1rem - 1px);
-        }
+        /* Farger for valgte alternativer */
+        input[value="stor"]:checked + label { background-color: #d1e7dd; border: 2px solid #198754; }
+        input[value="middels"]:checked + label { background-color: #fff3cd; border: 2px solid #ffc107; }
+        input[value="liten"]:checked + label { background-color: #cce5ff; border: 2px solid #0d6efd; }
+        input:checked + label { padding: calc(1rem - 1px); }
 
         #result-container {
-            position: sticky;
-            top: 2rem;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            transition: all 0.5s ease-in-out;
-            border-left: 5px solid #6c757d;
-            animation: fadeIn 0.6s ease-out forwards 0.1s; /* Litt forsinkelse */
+            position: sticky; top: 2rem; padding: 1.5rem; border-radius: 0.75rem;
+            transition: all 0.5s ease-in-out; border-left: 5px solid #6c757d;
+            animation: fadeIn 0.6s ease-out forwards 0.1s;
         }
+
+        .initial-state { background-color: #e9ecef; }
+        .export-section { margin-top: 1.5rem; animation: fadeIn 0.6s ease-out forwards 0.2s; }
         
-        #result-container h3 {
-            margin-top: 0;
-            font-weight: 700;
-        }
+        /* Styling for rapport-header */
+        #report-header h2 { font-size: 1.75rem; color: #212529; }
+        #report-header p { font-size: 1.1rem; color: #495057; }
 
-        .initial-state {
-             background-color: #e9ecef;
-        }
-
-        .export-section {
-            margin-top: 1.5rem;
-            animation: fadeIn 0.6s ease-out forwards 0.2s;
-        }
     </style>
 </head>
 <body>
 
     <div class="container my-5">
         <header class="text-center mb-5">
-            <h1 class="animate-on-load">Prioriteringsmatrise for raske beslutninger</h1>
-            <p class="lead text-muted animate-on-load">Fyll ut matrisen for å få en anbefaling om strategisk betydning for vervet.</p>
+            <h1>Prioriteringsmatrise for raske beslutninger</h1>
+            <p class="lead text-muted">Fyll ut matrisen for å få en anbefaling og eksporter en rapport.</p>
         </header>
 
         <div class="row g-5" id="export-area">
             <div class="col-lg-8">
                 <div class="matrix-container">
+                    <div id="input-section">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="input-verv" class="form-label fw-bold">Navn på verv</label>
+                                <input type="text" class="form-control" id="input-verv" placeholder="F.eks. Styremedlem">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="input-organisasjon" class="form-label fw-bold">Organisasjon</label>
+                                <input type="text" class="form-control" id="input-organisasjon" placeholder="F.eks. Innovasjon Norge">
+                            </div>
+                        </div>
+                        <hr class="mb-4">
+                    </div>
+                    
+                    <div id="report-header" class="d-none mb-4">
+                        <h2 id="report-verv-title"></h2>
+                        <p id="report-org-title" class="lead"></p>
+                        <hr>
+                    </div>
+
                     <form id="decision-matrix">
                         <table class="w-100 matrix-table">
                             <thead>
@@ -194,7 +191,7 @@
                                     <td><input type="radio" id="ressurs_middels" name="ressursbruk" value="middels"><label for="ressurs_middels"><span class="option-desc">Moderat (&lt;1 dag/mnd)</span></label></td>
                                     <td><input type="radio" id="ressurs_liten" name="ressursbruk" value="liten"><label for="ressurs_liten"><span class="option-desc">Minimal (sporadisk)</span></label></td>
                                 </tr>
-                                 <tr>
+                                <tr>
                                     <th scope="row"><i class="bi bi-bullseye me-2"></i>Strategisk verdi</th>
                                     <td><input type="radio" id="verdi_stor" name="verdi" value="stor"><label for="verdi_stor"><span class="option-desc">Klar strategisk gevinst</span></label></td>
                                     <td><input type="radio" id="verdi_middels" name="verdi" value="middels"><label for="verdi_middels"><span class="option-desc">Nettverk/synlighet</span></label></td>
@@ -209,7 +206,7 @@
             <div class="col-lg-4">
                 <div id="result-container" class="initial-state">
                     <h3>Totalvurdering</h3>
-                    <p id="result-text">Velg ett alternativ for hver rad for å se resultatet.</p>
+                    <p>Velg ett alternativ for hver rad for å se resultatet.</p>
                 </div>
                 <div class="export-section">
                      <p class="text-muted small">Ferdig med vurderingen?</p>
@@ -227,19 +224,97 @@
         const resultContainer = document.getElementById('result-container');
         const { jsPDF } = window.jspdf;
 
-        const resultsContent = {
+        const resultsContent = { /* ... (uendret) ... */ };
+        matrixForm.addEventListener('change', calculateResult);
+        function calculateResult() { /* ... (uendret) ... */ }
+        function updateResultDisplay(resultKey) { /* ... (uendret) ... */ }
+
+        // --- GJENBRUKBAR EKSPORTLOGIKK ---
+        const exportArea = document.getElementById('export-area');
+        const inputSection = document.getElementById('input-section');
+        const reportHeader = document.getElementById('report-header');
+        const exportSection = document.querySelector('.export-section');
+
+        const pngBtn = document.getElementById('export-png-btn');
+        const pdfBtn = document.getElementById('export-pdf-btn');
+
+        // Funksjon for å forberede DOM for eksport
+        const prepareForExport = () => {
+            // Hent verdier og populér rapport-header
+            const verv = document.getElementById('input-verv').value || "Ikke spesifisert";
+            const org = document.getElementById('input-organisasjon').value || "Ikke spesifisert";
+            document.getElementById('report-verv-title').innerText = verv;
+            document.getElementById('report-org-title').innerText = `Organisasjon: ${org}`;
+
+            // Bytt synlighet på elementer
+            inputSection.classList.add('d-none');
+            reportHeader.classList.remove('d-none');
+            exportSection.classList.add('d-none');
+
+            // Fiks for falmet bakgrunn
+            exportArea.style.backgroundColor = '#ffffff';
+        };
+
+        // Funksjon for å tilbakestille DOM etter eksport
+        const cleanupAfterExport = () => {
+            inputSection.classList.remove('d-none');
+            reportHeader.classList.add('d-none');
+            exportSection.classList.remove('d-none');
+            exportArea.style.backgroundColor = '';
+        };
+
+        // Event Listeners for knapper
+        pngBtn.addEventListener('click', async () => {
+            pngBtn.disabled = true;
+            pngBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Genererer...`;
+            prepareForExport();
+            
+            try {
+                const canvas = await html2canvas(exportArea, { scale: 2 });
+                const link = document.createElement('a');
+                link.download = 'prioriteringsmatrise.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } finally {
+                cleanupAfterExport();
+                pngBtn.disabled = false;
+                pngBtn.innerHTML = `<i class="bi bi-image me-2"></i>Last ned som bilde (PNG)`;
+            }
+        });
+
+        pdfBtn.addEventListener('click', async () => {
+            pdfBtn.disabled = true;
+            pdfBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Genererer...`;
+            prepareForExport();
+            
+            try {
+                const canvas = await html2canvas(exportArea, { scale: 2 });
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight > pageHeight ? pageHeight : imgHeight);
+                doc.save('prioriteringsmatrise.pdf');
+            } finally {
+                cleanupAfterExport();
+                pdfBtn.disabled = false;
+                pdfBtn.innerHTML = `<i class="bi bi-file-earmark-pdf me-2"></i>Last ned som rapport (PDF)`;
+            }
+        });
+
+        /* --- Sett inn de uendrede JS-funksjonene her --- */
+        const resultsContentUnchanged = {
             stor: { title: 'Stor betydning', text: '<strong>Anbefaling:</strong> Sendes til vurderingsforum for strategisk vurdering.', className: 'alert alert-success' },
             middels: { title: 'Middels betydning', text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for vurdering av kandidat og godkjenning.', className: 'alert alert-warning' },
             liten: { title: 'Liten betydning', text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for registrering og oppdatering i bruttolisten.', className: 'alert alert-primary' },
             initial: { title: 'Totalvurdering', text: 'Velg ett alternativ for hver rad for å se resultatet.', className: 'initial-state' }
         };
 
-        matrixForm.addEventListener('change', calculateResult);
-
-        function calculateResult() {
+        function calculateResultUnchanged() {
             const formData = new FormData(matrixForm);
             const selections = Array.from(formData.values());
-            if (selections.length < 4) { updateResultDisplay('initial'); return; }
+            if (selections.length < 4) { updateResultDisplayUnchanged('initial'); return; }
             const counts = {
                 stor: selections.filter(v => v === 'stor').length,
                 middels: selections.filter(v => v === 'middels').length,
@@ -248,58 +323,20 @@
             let finalResult = 'middels';
             if (counts.stor >= 3) { finalResult = 'stor'; } 
             else if (counts.liten >= 3) { finalResult = 'liten'; }
-            updateResultDisplay(finalResult);
+            updateResultDisplayUnchanged(finalResult);
         }
 
-        function updateResultDisplay(resultKey) {
-            const content = resultsContent[resultKey];
+        function updateResultDisplayUnchanged(resultKey) {
+            const content = resultsContentUnchanged[resultKey];
             resultContainer.className = '';
             resultContainer.classList.add(...content.className.split(' '));
             resultContainer.innerHTML = `<h3>${content.title}</h3><p>${content.text}</p>`;
         }
-
-        // --- Eksport-funksjonalitet ---
-        const exportArea = document.getElementById('export-area');
-        const pngBtn = document.getElementById('export-png-btn');
-        const pdfBtn = document.getElementById('export-pdf-btn');
-
-        pngBtn.addEventListener('click', () => {
-            pngBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Laster ned...';
-            pngBtn.disabled = true;
-            html2canvas(exportArea, { scale: 2, backgroundColor: null }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'prioriteringsmatrise.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                pngBtn.innerHTML = '<i class="bi bi-image me-2"></i>Last ned som bilde (PNG)';
-                pngBtn.disabled = false;
-            });
-        });
-
-        pdfBtn.addEventListener('click', () => {
-            pdfBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Genererer...';
-            pdfBtn.disabled = true;
-            html2canvas(exportArea, { scale: 2, backgroundColor: null }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const imgWidth = 210; // A4 width in mm
-                const pageHeight = 295; // A4 height in mm
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                let position = 0;
-                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                while (heightLeft >= 0) {
-                  position = heightLeft - imgHeight;
-                  doc.addPage();
-                  doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                  heightLeft -= pageHeight;
-                }
-                doc.save('prioriteringsmatrise.pdf');
-                pdfBtn.innerHTML = '<i class="bi bi-file-earmark-pdf me-2"></i>Last ned som rapport (PDF)';
-                pdfBtn.disabled = false;
-            });
-        });
+        
+        // Koble de uendrede funksjonene til event listener
+        matrixForm.addEventListener('change', calculateResultUnchanged);
+        // Kall en gang ved lasting for å sette initiell tilstand
+        updateResultDisplayUnchanged('initial');
 
     </script>
 </body>
