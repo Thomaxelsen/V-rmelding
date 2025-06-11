@@ -16,14 +16,8 @@
 
     <style>
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         body {
@@ -33,13 +27,8 @@
             background-attachment: fixed;
         }
 
-        .container {
-            max-width: 1100px;
-        }
-        
-        h1, h2, h3 {
-            font-weight: 700;
-        }
+        .container { max-width: 1100px; }
+        h1, h2, h3 { font-weight: 700; }
 
         .matrix-container {
             background-color: #ffffff;
@@ -50,67 +39,29 @@
             animation: fadeIn 0.6s ease-out forwards;
         }
 
-        .matrix-table {
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        
+        .matrix-table { border-collapse: separate; border-spacing: 0; }
         .matrix-table thead th {
-            font-weight: 500;
-            color: #6c757d;
-            text-align: center;
-            border: none;
-            padding-bottom: 0.5rem;
-            font-size: 0.9rem;
+            font-weight: 500; color: #6c757d; text-align: center;
+            border: none; padding-bottom: 0.5rem; font-size: 0.9rem;
         }
-        
         .matrix-table th[scope="row"] {
-            font-weight: 500;
-            padding: 1rem 1rem;
-            vertical-align: middle;
-            border: none;
-            width: 25%;
+            font-weight: 500; padding: 1rem 1rem; vertical-align: middle;
+            border: none; width: 25%;
         }
-
-        .matrix-table td {
-            padding: 0.4rem;
-            vertical-align: middle;
-            border: none;
-        }
-
-        .matrix-table input[type="radio"] {
-            display: none;
-        }
-
+        .matrix-table td { padding: 0.4rem; vertical-align: middle; border: none; }
+        .matrix-table input[type="radio"] { display: none; }
         .matrix-table label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-            cursor: pointer;
-            height: 100%;
-            min-height: 70px;
-            text-align: center;
-            transition: all 0.2s ease-in-out;
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 0.5rem;
+            display: flex; justify-content: center; align-items: center; padding: 1rem;
+            cursor: pointer; height: 100%; min-height: 70px; text-align: center;
+            transition: all 0.2s ease-in-out; background-color: #f8f9fa;
+            border: 1px solid #e9ecef; border-radius: 0.5rem;
         }
-        
         .matrix-table label:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
-            border-color: #adb5bd;
-            background-color: #fff;
+            transform: translateY(-3px); box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
+            border-color: #adb5bd; background-color: #fff;
         }
-
-        .matrix-table .option-desc {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #343a40;
-        }
+        .matrix-table .option-desc { font-size: 0.9rem; font-weight: 500; color: #343a40; }
         
-        /* Farger for valgte alternativer */
         input[value="stor"]:checked + label { background-color: #d1e7dd; border: 2px solid #198754; }
         input[value="middels"]:checked + label { background-color: #fff3cd; border: 2px solid #ffc107; }
         input[value="liten"]:checked + label { background-color: #cce5ff; border: 2px solid #0d6efd; }
@@ -125,10 +76,8 @@
         .initial-state { background-color: #e9ecef; }
         .export-section { margin-top: 1.5rem; animation: fadeIn 0.6s ease-out forwards 0.2s; }
         
-        /* Styling for rapport-header */
         #report-header h2 { font-size: 1.75rem; color: #212529; }
         #report-header p { font-size: 1.1rem; color: #495057; }
-
     </style>
 </head>
 <body>
@@ -224,53 +173,41 @@
         const resultContainer = document.getElementById('result-container');
         const { jsPDF } = window.jspdf;
 
-        const resultsContent = { /* ... (uendret) ... */ };
-        matrixForm.addEventListener('change', calculateResult);
-        function calculateResult() { /* ... (uendret) ... */ }
-        function updateResultDisplay(resultKey) { /* ... (uendret) ... */ }
-
-        // --- GJENBRUKBAR EKSPORTLOGIKK ---
         const exportArea = document.getElementById('export-area');
         const inputSection = document.getElementById('input-section');
         const reportHeader = document.getElementById('report-header');
         const exportSection = document.querySelector('.export-section');
-
         const pngBtn = document.getElementById('export-png-btn');
         const pdfBtn = document.getElementById('export-pdf-btn');
 
-        // Funksjon for å forberede DOM for eksport
         const prepareForExport = () => {
-            // Hent verdier og populér rapport-header
             const verv = document.getElementById('input-verv').value || "Ikke spesifisert";
             const org = document.getElementById('input-organisasjon').value || "Ikke spesifisert";
             document.getElementById('report-verv-title').innerText = verv;
             document.getElementById('report-org-title').innerText = `Organisasjon: ${org}`;
-
-            // Bytt synlighet på elementer
             inputSection.classList.add('d-none');
             reportHeader.classList.remove('d-none');
             exportSection.classList.add('d-none');
-
-            // Fiks for falmet bakgrunn
-            exportArea.style.backgroundColor = '#ffffff';
         };
 
-        // Funksjon for å tilbakestille DOM etter eksport
         const cleanupAfterExport = () => {
             inputSection.classList.remove('d-none');
             reportHeader.classList.add('d-none');
             exportSection.classList.remove('d-none');
-            exportArea.style.backgroundColor = '';
+        };
+        
+        // --- ENDRING: Optjoner for html2canvas er nå definert sentralt ---
+        const canvasOptions = {
+            scale: 2,
+            backgroundColor: '#ffffff' // Garanterer hvit, solid bakgrunn og fikser falmingsproblemet.
         };
 
-        // Event Listeners for knapper
         pngBtn.addEventListener('click', async () => {
             pngBtn.disabled = true;
             pngBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Genererer...`;
             prepareForExport();
-            
             try {
-                const canvas = await html2canvas(exportArea, { scale: 2 });
+                const canvas = await html2canvas(exportArea, canvasOptions); // Bruker de nye opsjonene
                 const link = document.createElement('a');
                 link.download = 'prioriteringsmatrise.png';
                 link.href = canvas.toDataURL('image/png');
@@ -286,9 +223,8 @@
             pdfBtn.disabled = true;
             pdfBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Genererer...`;
             prepareForExport();
-            
             try {
-                const canvas = await html2canvas(exportArea, { scale: 2 });
+                const canvas = await html2canvas(exportArea, canvasOptions); // Bruker de nye opsjonene
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = 210;
                 const pageHeight = 297;
@@ -303,18 +239,17 @@
             }
         });
 
-        /* --- Sett inn de uendrede JS-funksjonene her --- */
-        const resultsContentUnchanged = {
+        const resultsContent = {
             stor: { title: 'Stor betydning', text: '<strong>Anbefaling:</strong> Sendes til vurderingsforum for strategisk vurdering.', className: 'alert alert-success' },
             middels: { title: 'Middels betydning', text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for vurdering av kandidat og godkjenning.', className: 'alert alert-warning' },
             liten: { title: 'Liten betydning', text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for registrering og oppdatering i bruttolisten.', className: 'alert alert-primary' },
             initial: { title: 'Totalvurdering', text: 'Velg ett alternativ for hver rad for å se resultatet.', className: 'initial-state' }
         };
 
-        function calculateResultUnchanged() {
+        function calculateResult() {
             const formData = new FormData(matrixForm);
             const selections = Array.from(formData.values());
-            if (selections.length < 4) { updateResultDisplayUnchanged('initial'); return; }
+            if (selections.length < 4) { updateResultDisplay('initial'); return; }
             const counts = {
                 stor: selections.filter(v => v === 'stor').length,
                 middels: selections.filter(v => v === 'middels').length,
@@ -323,21 +258,18 @@
             let finalResult = 'middels';
             if (counts.stor >= 3) { finalResult = 'stor'; } 
             else if (counts.liten >= 3) { finalResult = 'liten'; }
-            updateResultDisplayUnchanged(finalResult);
+            updateResultDisplay(finalResult);
         }
 
-        function updateResultDisplayUnchanged(resultKey) {
-            const content = resultsContentUnchanged[resultKey];
+        function updateResultDisplay(resultKey) {
+            const content = resultsContent[resultKey];
             resultContainer.className = '';
             resultContainer.classList.add(...content.className.split(' '));
             resultContainer.innerHTML = `<h3>${content.title}</h3><p>${content.text}</p>`;
         }
         
-        // Koble de uendrede funksjonene til event listener
-        matrixForm.addEventListener('change', calculateResultUnchanged);
-        // Kall en gang ved lasting for å sette initiell tilstand
-        updateResultDisplayUnchanged('initial');
-
+        matrixForm.addEventListener('change', calculateResult);
+        updateResultDisplay('initial');
     </script>
 </body>
 </html>
