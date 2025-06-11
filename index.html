@@ -12,89 +12,103 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        /* Egendefinert CSS for et mer tiltalende utseende */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8f9fa;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1100px;
         }
-
+        
         h1 {
-            color: #212529;
             font-weight: 700;
         }
+
+        /* Styling av matrisen (tabellen) */
+        .matrix-table {
+            border-collapse: separate;
+            border-spacing: 0 1rem; /* Gir luft mellom radene */
+        }
         
-        .criterion-card {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .criterion-card h4 {
+        .matrix-table thead th {
             font-weight: 500;
-            color: #343a40;
-            margin-bottom: 1rem;
+            color: #6c757d;
+            text-align: center;
+            border: none;
+            padding-bottom: 0;
         }
 
-        /* Styling av radio-knapper som responsive "piller" */
-        .option-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.75rem;
+        .matrix-table tbody tr {
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
         }
 
-        .option-group input[type="radio"] {
-            display: none; /* Skjul den faktiske radio-knappen */
+        .matrix-table th[scope="row"] {
+            font-weight: 500;
+            padding: 1.5rem;
+            vertical-align: middle;
+            border: 1px solid #dee2e6;
+            border-right: none;
+            border-radius: 0.75rem 0 0 0.75rem;
+            width: 25%;
         }
 
-        .option-group label {
+        .matrix-table td {
+            padding: 0;
+            vertical-align: middle;
+            border: 1px solid #dee2e6;
+            border-left: none;
+            border-right: none;
+        }
+
+        .matrix-table td:last-child {
+             border-right: 1px solid #dee2e6;
+             border-radius: 0 0.75rem 0.75rem 0;
+        }
+
+        /* Styling av radio-knapper og labels for å fylle cellene */
+        .matrix-table input[type="radio"] {
+            display: none;
+        }
+
+        .matrix-table label {
             display: flex;
             flex-direction: column;
-            padding: 1rem;
-            border: 2px solid #e9ecef;
-            border-radius: 0.5rem;
+            justify-content: center;
+            padding: 1rem 1.25rem;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
             height: 100%;
+            text-align: center;
+            border-radius: 0;
+            transition: all 0.2s ease-in-out;
+            border: 3px solid transparent;
         }
         
-        .option-group label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            border-color: #ced4da;
-        }
-        
-        .option-group label .option-title {
-            font-weight: 500;
-            margin-bottom: 0.25rem;
+        .matrix-table label:hover {
+            background-color: #f8f9fa;
         }
 
-        .option-group label .option-desc {
+        .matrix-table .option-desc {
             font-size: 0.9rem;
-            color: #6c757d;
-        }
-        
-        /* Farger for valgte alternativer */
-        input[type="radio"][value="liten"]:checked + label {
-            border-color: #0d6efd; /* Blå */
-            background-color: #e7f1ff;
+            color: #495057;
         }
 
-        input[type="radio"][value="middels"]:checked + label {
-            border-color: #ffc107; /* Gul */
+        /* Farger for valgte alternativer */
+        input[value="liten"]:checked + label {
+            background-color: #e6f0ff;
+            border-color: #0d6efd; /* Blå */
+        }
+
+        input[value="middels"]:checked + label {
             background-color: #fff8e1;
+            border-color: #ffc107; /* Oransje */
         }
         
-        input[type="radio"][value="stor"]:checked + label {
-            border-color: #dc3545; /* Rød */
-            background-color: #f8d7da;
+        input[value="stor"]:checked + label {
+            background-color: #d1e7dd;
+            border-color: #198754; /* Grønn */
         }
 
         /* Resultatboks */
@@ -105,6 +119,7 @@
             padding: 1.5rem;
             border-radius: 0.75rem;
             transition: all 0.5s ease-in-out;
+            border-left: 5px solid #6c757d;
         }
         
         #result-container h3 {
@@ -114,7 +129,6 @@
 
         .initial-state {
              background-color: #e9ecef;
-             border-left: 5px solid #6c757d;
         }
     </style>
 </head>
@@ -126,123 +140,76 @@
             <p class="lead text-muted">Fyll ut matrisen for å få en anbefaling om strategisk betydning for vervet.</p>
         </header>
 
-        <div class="row">
+        <div class="row g-5">
             <div class="col-lg-8">
                 <form id="decision-matrix">
-                    <div class="criterion-card">
-                        <h4><i class="bi bi-building"></i> Organisasjon som utlyser vervet</h4>
-                        <div class="option-group" id="kriterie1">
-                            <div>
-                                <input type="radio" id="org_liten" name="organisasjon" value="liten">
-                                <label for="org_liten">
-                                    <span class="option-title">Liten betydning</span>
-                                    <span class="option-desc">Lokale/mindre aktører</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="org_middels" name="organisasjon" value="middels">
-                                <label for="org_middels">
-                                    <span class="option-title">Middels betydning</span>
-                                    <span class="option-desc">Relevante nasjonale/regionale aktører</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="org_stor" name="organisasjon" value="stor">
-                                <label for="org_stor">
-                                    <span class="option-title">Stor betydning</span>
-                                    <span class="option-desc">Strategisk samarbeidspartner</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="criterion-card">
-                        <h4><i class="bi bi-tags"></i> Tema for vervet</h4>
-                        <div class="option-group" id="kriterie2">
-                            <div>
-                                <input type="radio" id="tema_liten" name="tema" value="liten">
-                                <label for="tema_liten">
-                                    <span class="option-title">Liten betydning</span>
-                                    <span class="option-desc">Marginalt relevant</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="tema_middels" name="tema" value="middels">
-                                <label for="tema_middels">
-                                    <span class="option-title">Middels betydning</span>
-                                    <span class="option-desc">Indirekte knyttet til strategien</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="tema_stor" name="tema" value="stor">
-                                <label for="tema_stor">
-                                    <span class="option-title">Stor betydning</span>
-                                    <span class="option-desc">Direkte knyttet til prioriterte mål</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="criterion-card">
-                        <h4><i class="bi bi-hourglass-split"></i> Estimert ressursbruk</h4>
-                        <div class="option-group" id="kriterie3">
-                            <div>
-                                <input type="radio" id="ressurs_liten" name="ressursbruk" value="liten">
-                                <label for="ressurs_liten">
-                                    <span class="option-title">Liten betydning</span>
-                                    <span class="option-desc">Minimal (sporadisk)</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="ressurs_middels" name="ressursbruk" value="middels">
-                                <label for="ressurs_middels">
-                                    <span class="option-title">Middels betydning</span>
-                                    <span class="option-desc">Moderat (mindre enn én dag i måneden)</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="ressurs_stor" name="ressursbruk" value="stor">
-                                <label for="ressurs_stor">
-                                    <span class="option-title">Stor betydning</span>
-                                    <span class="option-desc">Betydelig (ukentlig/månedlig)</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="criterion-card">
-                        <h4><i class="bi bi-bullseye"></i> Strategisk verdi</h4>
-                        <div class="option-group" id="kriterie4">
-                            <div>
-                                <input type="radio" id="verdi_liten" name="verdi" value="liten">
-                                <label for="verdi_liten">
-                                    <span class="option-title">Liten betydning</span>
-                                    <span class="option-desc">Nyttig, men ikke avgjørende</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="verdi_middels" name="verdi" value="middels">
-                                <label for="verdi_middels">
-                                    <span class="option-title">Middels betydning</span>
-                                    <span class="option-desc">Nettverksbygging/synlighet</span>
-                                </label>
-                            </div>
-                            <div>
-                                <input type="radio" id="verdi_stor" name="verdi" value="stor">
-                                <label for="verdi_stor">
-                                    <span class="option-title">Stor betydning</span>
-                                    <span class="option-desc">Klar og direkte strategisk gevinst</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                    <table class="w-100 matrix-table">
+                        <thead>
+                            <tr>
+                                <th>Kriterium</th>
+                                <th>Liten betydning</th>
+                                <th>Middels betydning</th>
+                                <th>Stor betydning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row"><i class="bi bi-building me-2"></i>Organisasjon som utlyser</th>
+                                <td>
+                                    <input type="radio" id="org_liten" name="organisasjon" value="liten"><label for="org_liten"><span class="option-desc">Lokale/mindre aktører</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="org_middels" name="organisasjon" value="middels"><label for="org_middels"><span class="option-desc">Nasjonale/regionale aktører</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="org_stor" name="organisasjon" value="stor"><label for="org_stor"><span class="option-desc">Strategisk partner</span></label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="bi bi-tags me-2"></i>Tema for vervet</th>
+                                <td>
+                                    <input type="radio" id="tema_liten" name="tema" value="liten"><label for="tema_liten"><span class="option-desc">Marginalt relevant</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="tema_middels" name="tema" value="middels"><label for="tema_middels"><span class="option-desc">Indirekte knyttet til strategi</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="tema_stor" name="tema" value="stor"><label for="tema_stor"><span class="option-desc">Direkte knyttet til mål</span></label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="bi bi-hourglass-split me-2"></i>Estimert ressursbruk</th>
+                                <td>
+                                    <input type="radio" id="ressurs_liten" name="ressursbruk" value="liten"><label for="ressurs_liten"><span class="option-desc">Minimal (sporadisk)</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="ressurs_middels" name="ressursbruk" value="middels"><label for="ressurs_middels"><span class="option-desc">Moderat (&lt;1 dag/mnd)</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="ressurs_stor" name="ressursbruk" value="stor"><label for="ressurs_stor"><span class="option-desc">Betydelig (ukentlig/mnd)</span></label>
+                                </td>
+                            </tr>
+                             <tr>
+                                <th scope="row"><i class="bi bi-bullseye me-2"></i>Strategisk verdi</th>
+                                <td>
+                                    <input type="radio" id="verdi_liten" name="verdi" value="liten"><label for="verdi_liten"><span class="option-desc">Nyttig, ikke avgjørende</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="verdi_middels" name="verdi" value="middels"><label for="verdi_middels"><span class="option-desc">Nettverk/synlighet</span></label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="verdi_stor" name="verdi" value="stor"><label for="verdi_stor"><span class="option-desc">Klar strategisk gevinst</span></label>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </form>
             </div>
 
             <div class="col-lg-4">
                 <div id="result-container" class="initial-state">
                     <h3>Totalvurdering</h3>
-                    <p id="result-text">Vennligst fyll ut alle fire kriteriene for å se resultatet.</p>
+                    <p id="result-text">Velg ett alternativ for hver rad for å se resultatet.</p>
                 </div>
             </div>
         </div>
@@ -251,28 +218,27 @@
     <script>
         const matrixForm = document.getElementById('decision-matrix');
         const resultContainer = document.getElementById('result-container');
-        const resultText = document.getElementById('result-text');
-
-        // Definer innhold for hver vurdering
+        
+        // Definer innhold for hver vurdering med oppdaterte farger/klasser
         const resultsContent = {
             stor: {
                 title: 'Stor betydning',
                 text: '<strong>Anbefaling:</strong> Sendes til vurderingsforum for strategisk vurdering.',
-                className: 'alert alert-danger'
+                className: 'alert alert-success' // Grønn
             },
             middels: {
                 title: 'Middels betydning',
                 text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for vurdering av kandidat og godkjenning.',
-                className: 'alert alert-warning'
+                className: 'alert alert-warning' // Oransje
             },
             liten: {
                 title: 'Liten betydning',
                 text: '<strong>Anbefaling:</strong> Sendes til delporteføljeansvarlig for registrering og oppdatering i bruttolisten.',
-                className: 'alert alert-primary'
+                className: 'alert alert-primary' // Blå
             },
             initial: {
                 title: 'Totalvurdering',
-                text: 'Vennligst fyll ut alle fire kriteriene for å se resultatet.',
+                text: 'Velg ett alternativ for hver rad for å se resultatet.',
                 className: 'initial-state'
             }
         };
@@ -284,24 +250,21 @@
             const formData = new FormData(matrixForm);
             const selections = Array.from(formData.values());
 
-            // Sjekk om alle 4 kriterier er valgt
             if (selections.length < 4) {
                 updateResultDisplay('initial');
                 return;
             }
 
-            // Tell antall av hver type betydning
             const counts = {
                 stor: selections.filter(v => v === 'stor').length,
                 middels: selections.filter(v => v === 'middels').length,
                 liten: selections.filter(v => v === 'liten').length
             };
 
-            // Evaluer basert på logikken
-            let finalResult = 'middels'; // Standardverdi hvis ingen andre regler slår til
+            let finalResult = 'middels';
             if (counts.stor >= 3) {
                 finalResult = 'stor';
-            } else if (counts.liten >= 3) { // "Flesteparten" betyr 3 eller 4 av 4
+            } else if (counts.liten >= 3) {
                 finalResult = 'liten';
             }
             
@@ -311,11 +274,9 @@
         function updateResultDisplay(resultKey) {
             const content = resultsContent[resultKey];
             
-            // Bytt klasser for farge og stil
-            resultContainer.className = ''; // Tøm eksisterende klasser
+            resultContainer.className = '';
             resultContainer.classList.add(...content.className.split(' '));
             
-            // Oppdater innholdet
             resultContainer.innerHTML = `<h3>${content.title}</h3><p>${content.text}</p>`;
         }
     </script>
