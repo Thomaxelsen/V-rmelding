@@ -1,379 +1,395 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbeidsark for casearbeid med relasjonell koordinering</title>
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f8f9fa;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .main-title {
-            text-align: center;
-            color: #333;
-            font-size: 1.8em;
-            margin-bottom: 20px; /* Reduced margin */
-        }
+  <meta charset="utf-8" />
+  <title>Synlig halvkule fra ett punkt på jorden</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #050816;
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .controls {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            display: flex;
-            flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
-            align-items: center;
-            gap: 8px;
-            max-width: 900px; /* Align with diagram width */
-            justify-content: center;
-        }
-        .controls span {
-            font-size: 0.9em;
-        }
-        .controls button {
-            padding: 6px 12px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
-            cursor: pointer;
-            background-color: #fff;
-            font-size: 0.85em;
-        }
-        .controls button:hover {
-            border-color: #6c757d;
-            background-color: #f8f9fa;
-        }
-        .controls .color-btn.selected-color-btn {
-            border-width: 2px;
-            border-color: #343a40 !important;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-        #arrow-mode-status {
-            font-style: italic;
-            color: #495057;
-            margin: 0 10px;
-        }
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
 
-        .page-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 30px;
-            width: 100%;
-            max-width: 1350px;
-            margin: 0 auto;
-        }
-        .diagram-container {
-            position: relative;
-            width: 900px;
-            height: 750px;
-            flex-shrink: 0;
-        }
-        #arrow-svg-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Allows clicks to pass through to bubbles */
-            z-index: 1; 
-        }
+    canvas {
+      background: #02030a;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
 
-        .bubble {
-            position: absolute;
-            border: 2px solid #007bff;
-            background-color: #ffffff;
-            padding: 12px 18px; /* Total padding: horizontal 36px, vertical 24px */
-            border-radius: 60px;
-            text-align: center;
-            min-width: 130px; /* Content width before padding */
-            max-width: 180px; /* Content width before padding */
-            min-height: 35px;  /* Content height before padding */
-            /* Effective visual width approx: max-width + 36 (padding) + 4 (border) = 220px */
-            /* Effective visual height approx: min-height + 24 (padding) + 4 (border) = 63px */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: text; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            font-size: 0.85em;
-            line-height: 1.3;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            z-index: 2; 
-        }
-        .bubble.selected-bubble { 
-            outline: 3px dashed #fd7e14; 
-            outline-offset: 2px;
-        }
-        .bubble[contenteditable="true"]:focus {
-            outline: 2px solid #0056b3;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
-        .bubble[contenteditable="true"]:empty:before {
-            content: "Tekst...";
-            color: #999;
-            font-style: italic;
-        }
-        .central-bubble {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #e6f7ff;
-            border-color: #0056b3;
-            padding: 20px 30px;
-            min-width: 180px;
-            max-width: 220px;
-            font-size: 0.95em;
-            font-weight: bold;
-        }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
-        /* Nye symmetriske posisjoner for ytre bobler */
-        /* Senter (cx, cy) = (450, 375) */
-        /* Radiuser for ellipse (a, b) = (360, 280) */
-        /* Boble offset (x,y) basert på ca. 180px bredde, 63px høyde = (90, 31.5) */
+    button {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+    }
 
-        /* k=0: Topp */
-        #bubble1 { top: 64px; left: 360px; } /* Nettverk ifbm. akuttinnskr. */
-        /* k=1: Topp-høyre */
-        #bubble2 { top: 101px; left: 540px; } /* Team/Samarbeidsutv. */
-        /* k=2 */
-        #bubble3 { top: 204px; left: 672px; } /* Regionens */
-        /* k=3: Høyre midt */
-        #bubble4 { top: 344px; left: 720px; } /* Regionleder */
-        /* k=4 */
-        #bubble5 { top: 484px; left: 672px; } /* Regionteam */
-        /* k=5: Bunn-høyre */
-        #bubble6 { top: 586px; left: 540px; } /* Samarbeidspartnere */
-        /* k=6: Bunn midt */
-        #bubble7 { top: 624px; left: 360px; } /* Regionalnettverk */
-        /* k=7: Bunn-venstre */
-        #bubble8 { top: 586px; left: 180px; } /* Regionteam */
-        /* k=8 */
-        #bubble9 { top: 484px; left: 48px;  } /* Nettverk lokalt/kommunalt */
-        /* k=9: Venstre midt */
-        #bubble10 { top: 344px; left: 0px;  } /* Region-telen */
-        /* k=10 */
-        #bubble11 { top: 204px; left: 48px;  } /* Team møt */
-        /* k=11: Topp-venstre */
-        #bubble12 { top: 101px; left: 180px; } /* Seksjonsledermøt. */
+    button:hover {
+      background: #1d4ed8;
+    }
 
+    input[type="range"] {
+      width: 200px;
+    }
 
-        .case-box-container {
-            width: 320px;
-            padding: 20px;
-            border: 2px solid #28a745;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-top: 0;
-        }
-        .case-box-container h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #28a745;
-            text-align: center;
-            font-size: 1.3em;
-        }
-        .case-box-content {
-            min-height: 150px;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-            cursor: text;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-        .case-box-content[contenteditable="true"]:focus {
-            outline: 2px solid #1e7e34;
-            box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
-        }
-        .case-box-content[contenteditable="true"]:empty:before {
-            content: "Beskriv case, problemstilling, og skriv ned hva du ønsker å oppnå...";
-            color: #999;
-            font-style: italic;
-        }
-    </style>
+    .info {
+      font-size: 0.9rem;
+      max-width: 760px;
+      text-align: center;
+      line-height: 1.4;
+      color: #e5e7eb;
+    }
+
+    label span {
+      display: inline-block;
+      min-width: 40px;
+      text-align: right;
+    }
+  </style>
 </head>
 <body>
-
-    <h1 class="main-title">Arbeidsark for casearbeid med relasjonell koordinering</h1>
+  <div class="wrapper">
+    <canvas id="skyCanvas" width="760" height="520"></canvas>
 
     <div class="controls">
-        <span>Pilfarge:</span>
-        <button class="color-btn" data-color="green" style="background-color:green; color:white;">Grønn</button>
-        <button class="color-btn" data-color="blue" style="background-color:blue; color:white;">Blå</button>
-        <button class="color-btn" data-color="red" style="background-color:red; color:white;">Rød</button>
-        <button class="color-btn" data-color="black" style="background-color:black; color:white;">Svart</button>
-        <span id="arrow-mode-status">Velg farge, klikk deretter første boble...</span>
-        <button id="clearLastArrow">Slett siste pil</button>
-        <button id="clearAllArrows">Slett alle piler</button>
+      <button id="toggleBtn">Pause</button>
+      <label>
+        Tid på døgnet:
+        <input id="timeSlider" type="range" min="0" max="24" step="0.1" value="0" />
+        <span id="timeLabel">0,0 t</span>
+      </label>
     </div>
 
-    <div class="page-wrapper">
-        <div class="diagram-container">
-            <svg id="arrow-svg-layer">
-                <defs>
-                    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="green">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="blue">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                    <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="red">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                    <marker id="arrowhead-black" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto" fill="black">
-                        <polygon points="0 0, 10 3.5, 0 7" />
-                    </marker>
-                </defs>
-            </svg>
-
-            <div class="bubble central-bubble" id="centralBubble" contenteditable="true">Mitt team/min enhet/meg</div>
-            <div class="bubble" id="bubble1" contenteditable="true">Nettverk ifbm. akuttinnskr.</div>
-            <div class="bubble" id="bubble2" contenteditable="true">Team/Samarbeidsutv.</div>
-            <div class="bubble" id="bubble3" contenteditable="true">Regionens</div>
-            <div class="bubble" id="bubble4" contenteditable="true">Regionleder</div>
-            <div class="bubble" id="bubble5" contenteditable="true">Regionteam</div>
-            <div class="bubble" id="bubble6" contenteditable="true">Samarbeidspartnere</div>
-            <div class="bubble" id="bubble7" contenteditable="true">Regionalnettverk</div>
-            <div class="bubble" id="bubble8" contenteditable="true">Regionteam</div>
-            <div class="bubble" id="bubble9" contenteditable="true">Nettverk lokalt/kommunalt</div>
-            <div class="bubble" id="bubble10" contenteditable="true">Region-telen</div>
-            <div class="bubble" id="bubble11" contenteditable="true">Team møt</div>
-            <div class="bubble" id="bubble12" contenteditable="true">Seksjonsledermøt.</div>
-        </div>
-
-        <div class="case-box-container">
-            <h2>Ditt case:</h2>
-            <div class="case-box-content" contenteditable="true"></div>
-        </div>
+    <div class="info">
+      Til venstre ser du en «himmelkule» med stjerner sett utenfra. Den lyse halvdelen er den
+      delen av universet som er over horisonten og synlig fra ett punkt på jorden. Til høyre
+      ser du en jordklode og en observatør-pil. Når «døgnet» går, roterer både jordkloden og
+      skillet mellom synlig og skjult del av himmelen – men observatøren ser alltid bare én
+      halvkule av universet om gangen.
     </div>
+  </div>
 
-    <script>
-        // Forhindre liming av rik tekst
-        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
-            el.addEventListener('paste', function(e) {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                document.execCommand('insertText', false, text);
-            });
-        });
+  <script>
+    const canvas = document.getElementById("skyCanvas");
+    const ctx = canvas.getContext("2d");
 
-        // --- Ny JavaScript for piltegning ---
-        let startBubbleNode = null;
-        let selectedArrowColor = 'black'; // Standardfarge
-        const arrows = []; // Lagrer { startId, endId, color, lineElement }
-        const svgLayer = document.getElementById('arrow-svg-layer');
-        const statusDisplay = document.getElementById('arrow-mode-status');
-        const diagramContainer = document.querySelector('.diagram-container');
+    const w = canvas.width;
+    const h = canvas.height;
 
-        // Velg fargeknapper
-        document.querySelectorAll('.controls .color-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                selectedArrowColor = button.getAttribute('data-color');
-                document.querySelectorAll('.controls .color-btn').forEach(btn => btn.classList.remove('selected-color-btn'));
-                button.classList.add('selected-color-btn');
-                if (!startBubbleNode) {
-                    statusDisplay.textContent = `Farge ${selectedArrowColor} valgt. Klikk første boble...`;
-                } else {
-                    statusDisplay.textContent = `Farge ${selectedArrowColor} valgt. Startboble: ${startBubbleNode.id}. Klikk endeboble...`;
-                }
-            });
-        });
-        // Velg svart knapp som standard ved lasting
-        document.querySelector('.controls .color-btn[data-color="black"]').classList.add('selected-color-btn');
+    // Himmelkule (venstre)
+    const skyCx = w * 0.3;
+    const skyCy = h / 2;
+    const skyR = 210;
 
-        // Klikklytter for bobler
-        document.querySelectorAll('.bubble').forEach(bubble => {
-            bubble.style.cursor = 'crosshair'; // Endre musepeker for å indikere klikkbarhet for piler
-            bubble.addEventListener('click', (event) => {
-                if (!startBubbleNode) {
-                    startBubbleNode = bubble;
-                    bubble.classList.add('selected-bubble'); // Visuell markering
-                    statusDisplay.textContent = `Startboble: ${bubble.id}. Klikk endeboble... (Farge: ${selectedArrowColor})`;
-                } else {
-                    if (startBubbleNode === bubble) {
-                        startBubbleNode.classList.remove('selected-bubble');
-                        startBubbleNode = null;
-                        statusDisplay.textContent = `Valg av startboble kansellert. Velg farge, klikk første boble...`;
-                        return;
-                    }
+    // Jordklode (høyre)
+    const earthCx = w * 0.75;
+    const earthCy = h / 2;
+    const earthR = 80;
 
-                    const endBubbleNode = bubble;
-                    drawArrow(startBubbleNode, endBubbleNode, selectedArrowColor);
-                    
-                    startBubbleNode.classList.remove('selected-bubble'); // Fjern markering
-                    startBubbleNode = null;
-                    statusDisplay.textContent = `Pil tegnet. Velg farge, klikk første boble...`;
-                }
-            });
-        });
+    // Stjerner
+    const NUM_STARS = 500;
+    const stars = [];
 
-        function getBubbleCenter(bubbleElement) {
-            const centerX = bubbleElement.offsetLeft + bubbleElement.offsetWidth / 2;
-            const centerY = bubbleElement.offsetTop + bubbleElement.offsetHeight / 2;
-            return { x: centerX, y: centerY };
+    for (let i = 0; i < NUM_STARS; i++) {
+      const r = Math.sqrt(Math.random()) * (skyR - 12);
+      const ang = Math.random() * Math.PI * 2;
+      const x = skyCx + r * Math.cos(ang);
+      const y = skyCy + r * Math.sin(ang);
+      stars.push({ x, y });
+    }
+
+    // Vinkel som definerer "tid på døgnet"
+    let angle = 0;
+    let playing = true;
+
+    // Ett døgn på 20 sekunder
+    const dayDurationMs = 20000;
+
+    const toggleBtn = document.getElementById("toggleBtn");
+    const timeSlider = document.getElementById("timeSlider");
+    const timeLabel = document.getElementById("timeLabel");
+
+    let lastTime = performance.now();
+
+    function drawSky() {
+      // Bakgrunn
+      const grad = ctx.createRadialGradient(
+        skyCx, skyCy, 20,
+        skyCx, skyCy, skyR + 40
+      );
+      grad.addColorStop(0, "#0b1120");
+      grad.addColorStop(1, "#020617");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Klipp til himmelkulen
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(skyCx, skyCy, skyR, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Normalvektor til horisontplanet (hvilken halvkule som er synlig)
+      const nx = Math.cos(angle);
+      const ny = Math.sin(angle);
+
+      // Skjult side (stjerner svakt)
+      for (const s of stars) {
+        const sx = s.x - skyCx;
+        const sy = s.y - skyCy;
+        const dot = sx * nx + sy * ny;
+        if (dot <= 0) {
+          ctx.fillStyle = "rgba(148,163,184,0.25)";
+          ctx.fillRect(s.x, s.y, 1.5, 1.5);
         }
+      }
 
-        function drawArrow(startNode, endNode, color) {
-            const startId = startNode.id || `bubble-start-${Math.random().toString(16).slice(2)}`;
-            if (!startNode.id) startNode.id = startId;
-            const endId = endNode.id || `bubble-end-${Math.random().toString(16).slice(2)}`;
-            if (!endNode.id) endNode.id = endId;
+      // Mørkere slør over skjult halvkule
+      ctx.beginPath();
+      ctx.moveTo(skyCx, skyCy);
+      ctx.arc(
+        skyCx,
+        skyCy,
+        skyR,
+        angle + Math.PI / 2,
+        angle + (3 * Math.PI) / 2,
+        false
+      );
+      ctx.closePath();
+      ctx.fillStyle = "rgba(15,23,42,0.72)";
+      ctx.fill();
 
-            const startCoords = getBubbleCenter(startNode);
-            const endCoords = getBubbleCenter(endNode);
-
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', String(startCoords.x));
-            line.setAttribute('y1', String(startCoords.y));
-            line.setAttribute('x2', String(endCoords.x));
-            line.setAttribute('y2', String(endCoords.y));
-            line.setAttribute('stroke', color);
-            line.setAttribute('stroke-width', '2.5');
-            line.setAttribute('marker-end', `url(#arrowhead-${color})`);
-            
-            svgLayer.appendChild(line);
-            arrows.push({ startId: startNode.id, endId: endNode.id, color: color, lineElement: line });
+      // Synlig side (stjerner sterkt)
+      for (const s of stars) {
+        const sx = s.x - skyCx;
+        const sy = s.y - skyCy;
+        const dot = sx * nx + sy * ny;
+        if (dot > 0) {
+          const twinkle = 0.6 + Math.random() * 0.4;
+          ctx.fillStyle = "rgba(248,250,252," + twinkle + ")";
+          ctx.fillRect(s.x, s.y, 1.8, 1.8);
         }
+      }
 
-        document.getElementById('clearLastArrow').addEventListener('click', () => {
-            const lastArrow = arrows.pop();
-            if (lastArrow && lastArrow.lineElement) {
-                lastArrow.lineElement.remove();
-            }
-            if (startBubbleNode) {
-                startBubbleNode.classList.remove('selected-bubble');
-                startBubbleNode = null;
-                statusDisplay.textContent = 'Valg av startboble kansellert. Velg farge, klikk første boble...';
-            } else {
-                 statusDisplay.textContent = 'Siste pil slettet. Velg farge, klikk første boble...';
-            }
-        });
+      // "Horisont-sirkel" (stor sirkel gjennom kule som deler halvkuler)
+      const hx1 = skyCx + skyR * Math.cos(angle + Math.PI / 2);
+      const hy1 = skyCy + skyR * Math.sin(angle + Math.PI / 2);
+      const hx2 = skyCx + skyR * Math.cos(angle + (3 * Math.PI) / 2);
+      const hy2 = skyCy + skyR * Math.sin(angle + (3 * Math.PI) / 2);
 
-        document.getElementById('clearAllArrows').addEventListener('click', () => {
-            arrows.forEach(arrow => {
-                if (arrow.lineElement) arrow.lineElement.remove();
-            });
-            arrows.length = 0; 
-            if (startBubbleNode) {
-                startBubbleNode.classList.remove('selected-bubble');
-                startBubbleNode = null;
-            }
-            statusDisplay.textContent = 'Alle piler slettet. Velg farge, klikk første boble...';
-        });
+      ctx.beginPath();
+      ctx.moveTo(hx1, hy1);
+      ctx.lineTo(hx2, hy2);
+      ctx.strokeStyle = "rgba(148,163,184,0.85)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    </script>
+      ctx.restore();
 
+      // Kant rundt himmelkulen
+      ctx.beginPath();
+      ctx.arc(skyCx, skyCy, skyR, 0, Math.PI * 2);
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Tekst
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font =
+        '14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.textAlign = "center";
+      ctx.fillText("Synlig halvkule (over horisonten)", skyCx, skyCy - skyR - 16);
+      ctx.fillText("Skjult bak jorden", skyCx, skyCy + skyR + 18);
+    }
+
+    function drawEarthAndObserver() {
+      // Jordklode
+      const eg = ctx.createRadialGradient(
+        earthCx - earthR * 0.4,
+        earthCy - earthR * 0.4,
+        earthR * 0.3,
+        earthCx,
+        earthCy,
+        earthR * 1.2
+      );
+      eg.addColorStop(0, "#38bdf8");
+      eg.addColorStop(1, "#0f172a");
+      ctx.beginPath();
+      ctx.arc(earthCx, earthCy, earthR, 0, Math.PI * 2);
+      ctx.fillStyle = eg;
+      ctx.fill();
+
+      // Enkel "meridian" for å vise rotasjon
+      ctx.beginPath();
+      ctx.arc(earthCx, earthCy, earthR * 0.98, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(15,23,42,0.9)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Tegn noen grove "kontinenter"
+      ctx.save();
+      ctx.translate(earthCx, earthCy);
+      ctx.rotate(angle);
+      ctx.fillStyle = "rgba(34,197,94,0.8)";
+      ctx.beginPath();
+      ctx.ellipse(-earthR * 0.3, -earthR * 0.1, earthR * 0.35, earthR * 0.22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(earthR * 0.2, earthR * 0.15, earthR * 0.28, earthR * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Observatørposisjon på jordoverflaten
+      // Velg en "breddegrad" ~45° nord for illustrasjon
+      const lat = (45 * Math.PI) / 180;
+      // La longituden følge døgnet (angle)
+      const lon = angle;
+      // Konverter til 2D (forenkl: bare bruk angle på sirkelen)
+      const obsAngle = lon - Math.PI / 2; // roter litt for å få fin plassering
+
+      const ox = earthCx + earthR * Math.cos(obsAngle);
+      const oy = earthCy + earthR * Math.sin(obsAngle);
+
+      // Pil som viser "opp" (lokal vertikal)
+      const upLen = 35;
+      const ux = ox + upLen * Math.cos(obsAngle);
+      const uy = oy + upLen * Math.sin(obsAngle);
+
+      // Strek fra jordoverflate til pilspiss
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ux, uy);
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Pilhode
+      const headSize = 8;
+      const ang = Math.atan2(uy - oy, ux - ox);
+      ctx.beginPath();
+      ctx.moveTo(ux, uy);
+      ctx.lineTo(
+        ux - headSize * Math.cos(ang - Math.PI / 6),
+        uy - headSize * Math.sin(ang - Math.PI / 6)
+      );
+      ctx.lineTo(
+        ux - headSize * Math.cos(ang + Math.PI / 6),
+        uy - headSize * Math.sin(ang + Math.PI / 6)
+      );
+      ctx.closePath();
+      ctx.fillStyle = "#fbbf24";
+      ctx.fill();
+
+      // Lite punkt der observatøren står
+      ctx.beginPath();
+      ctx.arc(ox, oy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#facc15";
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+
+      // Rotasjonspil rundt jorden (for å indikere dag/natt-rotasjon)
+      const rpR = earthR + 20;
+      const start = -Math.PI / 3;
+      const end = start + (2 * Math.PI) * 0.7;
+      ctx.beginPath();
+      ctx.arc(earthCx, earthCy, rpR, start, end);
+      ctx.strokeStyle = "rgba(148,163,184,0.8)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const ax = earthCx + rpR * Math.cos(end);
+      const ay = earthCy + rpR * Math.sin(end);
+      const aDir = end;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(
+        ax - 7 * Math.cos(aDir - Math.PI / 6),
+        ay - 7 * Math.sin(aDir - Math.PI / 6)
+      );
+      ctx.lineTo(
+        ax - 7 * Math.cos(aDir + Math.PI / 6),
+        ay - 7 * Math.sin(aDir + Math.PI / 6)
+      );
+      ctx.closePath();
+      ctx.fillStyle = "rgba(148,163,184,0.8)";
+      ctx.fill();
+
+      // Tekstforklaring
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font =
+        '13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.textAlign = "center";
+      ctx.fillText("Jord", earthCx, earthCy - earthR - 18);
+      ctx.fillText("Observatør", ux + 10, uy - 4);
+      ctx.textAlign = "left";
+      ctx.fillText("Rotasjon →", earthCx + rpR + 12, earthCy);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      drawSky();
+      drawEarthAndObserver();
+    }
+
+    function update(timestamp) {
+      const dt = timestamp - lastTime;
+      lastTime = timestamp;
+
+      if (playing) {
+        const deltaAngle = (2 * Math.PI) * (dt / dayDurationMs);
+        angle = (angle + deltaAngle) % (2 * Math.PI);
+
+        const hours = (angle / (2 * Math.PI)) * 24;
+        timeSlider.value = hours.toFixed(1);
+        timeLabel.textContent = hours.toFixed(1).replace(".", ",") + " t";
+      }
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    // Play/pause
+    toggleBtn.addEventListener("click", () => {
+      playing = !playing;
+      toggleBtn.textContent = playing ? "Pause" : "Spill av";
+    });
+
+    // Manuelt valg av tidspunkt
+    timeSlider.addEventListener("input", () => {
+      const hours = parseFloat(timeSlider.value);
+      timeLabel.textContent = hours.toFixed(1).replace(".", ",") + " t";
+      angle = (hours / 24) * 2 * Math.PI;
+      draw();
+    });
+
+    // Start
+    draw();
+    requestAnimationFrame(update);
+  </script>
 </body>
 </html>
